@@ -12,17 +12,18 @@
 #include <iostream>
 #include <sstream>
 
+struct ViewProperties 
+{
+	glm::vec3 position;
+	glm::vec3 forward; 
+	glm::vec3 up;
+};
+
 class Camera
 {
 	private:
 
 	public:
-
-		struct ViewProperties {
-			glm::vec3 position;
-			glm::vec3 forward; 
-			glm::vec3 up;
-		};
 
 		ViewProperties viewProperties;
 
@@ -32,7 +33,7 @@ class Camera
 		float turnSpeed;
 		float moveSpeed;
 		
-		void Init() { turnSpeed =  0.0001f; moveSpeed = .01f; }
+		void Init() { turnSpeed =  0.0005f; moveSpeed = .01f; }
 
 		void ProcessMouse(int x, int y, int deltaTime, int winw, int winh);
 };

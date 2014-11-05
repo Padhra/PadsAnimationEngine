@@ -10,7 +10,6 @@ Shader::~Shader()
 
 }
 
-// 1.2
 void Shader::CompileShader(GLuint ShaderProgram, GLenum ShaderType)
 {
 	// create a shader object
@@ -44,6 +43,38 @@ void Shader::CompileShader(GLuint ShaderProgram, GLenum ShaderType)
 
 	// Attach the compiled shader object to the program object
 	glAttachShader(ShaderProgram, ShaderObj);
+
+	glLinkProgram(ShaderProgram); //https://www.opengl.org/sdk/docs/man/html/glLinkProgram.xhtml
+
+	#pragma region ERROR CHECKING
+	GLint Success = 0;
+	GLchar ErrorLog[1024] = { 0 };
+
+	// check for program related errors using glGetProgramiv
+	glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
+	if (Success == 0) 
+	{
+		glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
+		fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
+		system("pause");
+		exit(1);
+	}
+	#pragma endregion
+	
+	//check whether the program can execute given the current pipeline state
+	glValidateProgram(ShaderProgram); 
+	
+	#pragma region ERROR CHECKING
+	// check for program related errors using glGetProgramiv
+	glGetProgramiv(ShaderProgram, GL_VALIDATE_STATUS, &Success);
+	if (!Success) 
+	{
+		glGetProgramInfoLog(ShaderProgram, sizeof(ErrorLog), NULL, ErrorLog);
+		fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
+		system("pause");
+		exit(1);
+	}
+	#pragma endregion
 }
 
 bool Shader::LoadFile(const std::string& fileName)

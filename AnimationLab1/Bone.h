@@ -6,57 +6,85 @@
 
 #include <string> 
 #include <glm\glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <list>
 #include <vector>
 
 #include "Helper.h"
 
-//The bone should also have an initial orientation, 
-//local transformation, and the ability to update its orientation with respect to its parent (to create animation).
-//You may want a function here that can calculate the global transform of the bone, 
-//based on the global transform of the parent.
+struct PosKeyFrame
+{
+	glm::vec3 position;
+	double time;
+};
+
+struct RotKeyFrame
+{
+	glm::quat rotation;
+	double time;
+};
+
+struct ScaleKeyFrame
+{
+	glm::vec3 scale;
+	double time;
+};
+
+struct Weight
+{
+	int vertexID;
+	int weighting;
+};
+
 class Bone
 {
 	private:
 
 	public:
-		const char* name;
-		int id; // if this node corresponds to one of our weight-painted bones then we give
-		//the index of that here, otherwrise it is set to -1
 
-		Bone* parent; //If parent == null, I am (g)root
+		char name[50];
+		GLfloat id; 
+
+		aiBone* aibone;
+
+		Bone* parent; 
 		std::vector<Bone*> children;
 
+		//std::vector<Weight> weights;
+
 		glm::mat4 offset;
-		/*glm::vec3 m_rotationAxis;
-		float m_rotationAngle;
-		glm::vec3 m_translation;*/				//A better node		//glm::mat4 transform;
+		glm::mat4 inv_offset;
+
+		glm::mat4 localTransform;
+		glm::mat4 globalTransform;
+
+		std::vector<PosKeyFrame*> posKeyframes;
+		std::vector<RotKeyFrame*> rotKeyframes;
+		std::vector<ScaleKeyFrame*> scaleKeyframes;
+
+		glm::vec3 GetMeshSpacePosition() 
+		{
+			//glm::vec3 worldPosition;
+			//decomposeTRS(globalTransform, worldPosition, glm::mat4(1), glm::vec3(1));
+
+			//return worldPosition;
+			
+			///*return glm::vec3
+			//(
+			//	globalTransform[3][0], 
+			//	globalTransform[3][1],
+			//	globalTransform[3][2]
+			//)*/
+
+			glm::mat4 matAbs = globalTransform * inv_offset; 
+			
+			return glm::vec3
+			(
+				matAbs[3][0], 
+				matAbs[3][1],
+				matAbs[3][2]
+			);
+		}
 };
-
-/*
-	void RenderObject(Node *pNode)
-	{
-		nodeGlobal = pNode->getGlobalTransform();
-		Send uniform matrix nodeGlobal to shader
-		pNode->render();
-	
-		//DEPTH FIRST pattern from root to leaf node
-		for each child of pNode, do
-			RenderObject(child);
-	}
-
-	void displayFunction(void)
-	{
-		RenderObject(pSceneRootNode);
-	}
-*/
-
-//GetGlobalTransform()
-//{
-	//translate to x,y of root
-	//rotate to root rotation
-	//translate offset, rotate to child rot
-	//if child == me, return translation matrix?
-//}
 
 #endif

@@ -4,53 +4,80 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 #include <assimp/cimport.h> // C importer
 #include <assimp/scene.h> // collects data
 #include <assimp/postprocess.h> // various extra operations
 #include <assert.h>
 
 #include <vector>
+#include <map>
 
 #include "helper.h"
 #include "Bone.h"
+//#include "Model.h"
+
+#include <glm\gtx\quaternion.hpp>
+
+class Model;
 
 class Skeleton
 {
 	private:
-		char boneNames[256][MAX_BONES]; //for bone hierarchy checking
-		//char boneIDs[MAX_BONES]; //for bone id setting
-
-		const aiMesh* mesh;
 		
-		Bone* root;
-		bool rootFlag;
+		Model* model;
 
-		std::vector<Bone*> bones;
+		std::map<int, Bone*> bones;
+		std::map<std::string, int> boneNameToID;
+
+		//animationIndex 0- walk, 1-run etc.
+
+		double animationDuration;
+		double animationTimer;
+
+		float animationSpeedScalar;
+
+		std::vector<std::string> bonesAdded;
+
+		Bone* GetBone(Bone* root, const char* name);
 
 	public:
-		Skeleton(const aiMesh* mesh);
+		Bone* root;
+
+		bool hasKeyframes;
+		std::map<std::string, std::vector<Bone*>> ikChains;
+		GLuint line_vao;
+
+		Skeleton(Model* myModel, const aiMesh* mesh, bool keyframes);
 		virtual ~Skeleton();
 
-		glm::mat4 TEMP_local_anims[MAX_BONES];
+		bool ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, Bone* parent);
+		void Animate(double deltaTime);
 
-		bool ImportBoneHierarchy(aiNode* aiBone, Bone* bone, Bone* parent);
+		//void Control(bool *keyStates);
+		
+		bool ComputeIK(std::string chainName, glm::vec3 D, int steps);
+		void DefineIKChain(std::string name, std::vector<Bone*> chain);
 
-		//ReadNodeHierachy - recursive
+		void UpdateGlobalTransforms(Bone* bone, glm::mat4 parentTransform);
 
-		//You will also need to have a function to calculate the global transformation 
-		//of all of the bones in the hierarchy. 
-		//This function should be recursive and should traverse the hierarchy, 
-		//working out the global transformation of each bone 
-		//(using its local orientation and the global transform of its parent)
-
+		void PrintHeirarchy(Bone* root);
 
 		//Getters
-		std::vector<Bone*> GetBones() { return bones; }
+		std::map<int, Bone*> GetBones() { return bones; }
+		
+		Bone* GetBone(int id) { return bones[id]; }
+		Bone* GetBone(std::string name);
+
+		Bone* operator [](int i) { return bones[i]; }
 		Bone* GetRootBone() { return root; }
+		
+		double GetAnimationTimer() { return animationTimer; }
 
-		// recursive animation using hierarchy. animate node, children inherit animation 
-		void GetGlobalTransforms(Bone* node, glm::mat4 parent_mat, glm::mat4* bone_animation_mats);
-
+		//Setters
+		void SetAnimDuration(double pAnimationDuration) { animationDuration = pAnimationDuration; }
 };
 
 #endif

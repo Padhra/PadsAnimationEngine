@@ -14,20 +14,16 @@
 class ShaderManager
 {
 	private:
-		GLuint activeShader;
 		std::map <std::string, GLuint> shaderProgramList;
+		GLuint currentShaderProgramID;
 
 	public:
-		void Init() {
-			activeShader = 0;
-		};
-
 		GLuint CreateShaderProgram(std::string name, const std::string& vsFilename, const std::string& psFilename);
 		
 		void SetShaderProgram(std::string shaderProgramName) { SetShaderProgram(shaderProgramList[shaderProgramName]); };
 		void SetShaderProgram(GLuint shaderProgramID);
 
-		GLuint operator[](std::string shaderProgramName) { return shaderProgramList[shaderProgramName]; }
+		GLuint GetShaderProgramID(std::string shaderProgramName) { return shaderProgramList[shaderProgramName]; }
 };
 
 #endif

@@ -84,7 +84,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="Skeleton.cpp" />
@@ -93,14 +93,19 @@
     <ClInclude Include="Bone.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Helper.h" />
-    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Line.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="Skeleton.h" />
+    <ClInclude Include="Spline.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
     <None Include="Shaders\diffuse.ps" />
     <None Include="Shaders\diffuse.vs" />
+    <None Include="Shaders\skinned.ps" />
+    <None Include="Shaders\skinned.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -146,21 +146,26 @@ int main(int argc, char** argv)
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), MESH_FILE1, shaderManager.GetShaderProgramID("skinned")));
 	
 	//BOB
-	//glm::quat q = glm::angleAxis(270.0f, glm::vec3(1,0,0));
-	//q *= glm::angleAxis(0.0f, glm::vec3(0,1,0));
+	//glm::quat q = glm::quat();
+	//	
+	//q *= glm::angleAxis(270.0f, glm::vec3(1,0,0));
+	//q *= glm::angleAxis(180.0f, glm::vec3(0,1,0));
 	//q *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
-	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1)/*glm::toMat4(q)*/, glm::vec3(.1), MESH_FILE4, shaderManager.GetShaderProgramID("skinned")));
+
+	//objectList.push_back(new Model(glm::vec3(0,0,0), /*glm::mat4(1)*/glm::toMat4(q), glm::vec3(.1), MESH_FILE4, shaderManager.GetShaderProgramID("skinned")));
 	//
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
-	//chain.push_back(objectList[0]->GetSkeleton()->GetBones()[11]); //DO THIS BY NAME - mBoneMapping
-	//chain.push_back(objectList[0]->GetSkeleton()->GetBones()[10]);
-	//chain.push_back(objectList[0]->GetSkeleton()->GetBones()[9]);
-	//chain.push_back(objectList[0]->GetSkeleton()->GetBones()[8]);
+	//chain.push_back(objectList[0]->GetSkeleton()->GetBone("fingers.L")); //DO THIS BY NAME - mBoneMapping   //11
+	//
+	//for(int i = 0; i < 3; i++)
+	//	chain.push_back(chain[chain.size()-1]->parent);
+	//std::reverse(chain.begin(),chain.end());
+
 	//objectList.at(0)->GetSkeleton()->DefineIKChain("chain1", chain);
 	
 	//CONES
 	glm::quat q = glm::angleAxis(-90.0f, glm::vec3(1,0,0));
-	objectList.push_back(new Model(glm::vec3(0,0,0), /*glm::mat4(1)*/glm::toMat4(q), glm::vec3(1), MESH_FILE5, shaderManager.GetShaderProgramID("skinned")));
+	objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1)/*glm::toMat4(q)*/, glm::vec3(1), MESH_FILE5, shaderManager.GetShaderProgramID("skinned")));
 
 	std::vector<Bone*> chain; 
 	chain.push_back(objectList[0]->GetSkeleton()->GetBones()[3]); 
@@ -404,6 +409,8 @@ void processInput()
 	if(keyStates['m'])
 		target->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
 
+	//objectList[0]->worldProperties.orientation *= glm::toMat4(glm::angleAxis(1.0f, glm::vec3(0,1,0)));
+
 }
 
 void printouts()
@@ -424,7 +431,7 @@ void printouts()
 
 	//PRINT BONE SELECTION
 	ss.str(std::string()); // clear
-	//ss << "testAnimBone: " << testAnimBone % 32;
+	ss << "Selected Bone: [" << testAnimBone%32 << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone%32)->name;
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
 
 	//PRINT BONES

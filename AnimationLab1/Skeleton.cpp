@@ -82,7 +82,7 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 
 					bone->localTransform = glm::mat4(1);
 
-					root = bone; //The last guy to get in here is the root, as it is depth first
+					root = bone->parent; //The last guy to get in here is the root, as it is depth first
 
 					break;
 				}
@@ -214,7 +214,6 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 	int effectorIdx = links.size()-1; //Effector is in the last position
 	int linkIdx = effectorIdx - 1; //current link one up from effector
 
-
 	glm::vec3 T_YZ = glm::vec3(0, T.y, T.z);
 	glm::vec3 T_XY = glm::vec3(T.x, T.y, 0);
 
@@ -235,69 +234,56 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 		{
 			glm::vec3 BE = E - B; //vector in the direction of the effector
 			//glm::vec3 BT_YZ = T_YZ - B; //vector in the direction of the target
-			glm::vec3 BT_XY = T_XY - B; //vector in the direction of the target
+			//glm::vec3 BT_XY = T_XY - B; //vector in the direction of the target
+			glm::vec3 BT = T - B;
 
 
 			BE = glm::normalize(BE);
 			//BT_YZ = glm::normalize(BT_YZ);
-			BT_XY = glm::normalize(BT_XY);
+			//BT_XY = glm::normalize(BT_XY);
+			BT = glm::normalize(BT);
 
-			/*if(is2d)
-			{
-				BE.z = 0;
-				BT.z = 0;
-			}*/
-
-			double cosAngle1 = glm::dot(BT_XY, BE);
-			float turnAngle1 = glm::degrees(glm::acos(cosAngle1));
+			double cosAngle = glm::dot(BT, BE);
+			float turnAngle = glm::degrees(glm::acos(cosAngle));
 
 			glm::mat4 rotation = glm::mat4(1);
-			//glm::quat rotation;
 
-			if(cosAngle1 < 0.9999f) // IF THE DOT PRODUCT RETURNS 1.0, I DON'T NEED TO ROTATE AS IT IS 0 DEGREES
+			if(cosAngle < 0.9999f) // IF THE DOT PRODUCT RETURNS 1.0, I DON'T NEED TO ROTATE AS IT IS 0 DEGREES
 			{
-				glm::vec3 rotationAxis = glm::normalize(glm::cross(BE,BT_XY));
-
-				if(rotationAxis.z < 0)
-					turnAngle1 = -turnAngle1;
-
-				rotationAxis = glm::vec3(0,0,1);
-
-				rotation = glm::rotate(glm::mat4(1), turnAngle1, rotationAxis);
 				
+				glm::vec3 rotationAxis = glm::normalize(glm::cross(BE,BT));
 
-				bone->localTransform = glm::rotate(glm::mat4(1), turnAngle1, rotationAxis) * bone->localTransform;
-				UpdateGlobalTransforms(bone, bone->parent->globalTransform);
-			}
+				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
 
-			modelMat = model->GetModelMatrix();
+				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
+				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
+				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
 
-		    B = glm::vec3(modelMat * glm::vec4(bone->GetMeshSpacePosition(), 1));
-		    E = glm::vec3(modelMat * glm::vec4(links[effectorIdx]->GetMeshSpacePosition(), 1));
+				glm::mat4 off = bone->inv_offset;
 
-			BE = E - B;
+				rotationAxis = glm::inverse(glm::mat3(bone->globalTransform * off * modelMat)) * rotationAxis;
+				
+				
+				//rotationAxis = glm::mat3(bone->inv_offset * bone->globalTransform * modelMat) * rotationAxis;
+				//rotationAxis = glm::mat3(bone->inv_offset * bone->globalTransform * modelMat) * rotationAxis;
 
-			glm::vec3 BT_YZ = T_YZ - B; //vector in the direction of the target
-			BT_YZ = glm::normalize(BT_YZ);
-			BE = glm::normalize(BE);
 
-			double cosAngle2 = glm::dot(BT_YZ, BE);
-			float turnAngle2 = glm::degrees(glm::acos(cosAngle2));
-			
-			
-			if(cosAngle2 < 0.9999f) // IF THE DOT PRODUCT RETURNS 1.0, I DON'T NEED TO ROTATE AS IT IS 0 DEGREES
-			{
-				glm::vec3 rotationAxis = glm::normalize(glm::cross(BE, BT_YZ));
+				//rotationAxis = glm::mat3(glm::inverse(bone->globalTransform)) * rotationAxis;
 
-				if(rotationAxis.x < 0)
-					turnAngle2 = -turnAngle2;
+				//if(rotationAxis.z < 0)
+					//turnAngle = -turnAngle;
 
-				rotationAxis = glm::vec3(1,0,0);
+				//rotationAxis = glm::vec3(0,0,1);
 
-				rotation = glm::rotate(glm::mat4(1), turnAngle2, rotationAxis);
-
-				bone->localTransform = rotation * bone->localTransform;
-				UpdateGlobalTransforms(bone, bone->parent->globalTransform);
+				//if ((rotationAxis != glm::vec3()) && rotationAxis == rotationAxis)
+				//{
+					rotation = glm::rotate(glm::mat4(1), turnAngle, rotationAxis);
+				
+					assert(rotation == rotation);
+					
+					bone->localTransform = rotation * bone->localTransform;
+					UpdateGlobalTransforms(bone, bone->parent->globalTransform);
+				//}
 			}
 
 			//glm::quat myquaternion(glm::vec3(0, 0, turnAngle1));

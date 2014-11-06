@@ -45,8 +45,6 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 
 					bone->aibone = scene->mMeshes[meshIdx]->mBones[boneIdx]; //for grabbing weights
 
-					
-
 					//TODO - copy out weights too
 					/*for(int weightIdx = 0; weightIdx < scene->mMeshes[meshIdx]->mBones[boneIdx]->mNumWeights; weightIdx++)
 					{
@@ -63,10 +61,6 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					
 					bone->offset = convert_assimp_matrix(scene->mMeshes[meshIdx]->mBones[boneIdx]->mOffsetMatrix);
 					//bone->inv_offset = glm::inverse(bone->offset);
-
-					//aiBone->mTransformation
-					
-					
 
 					glm::vec3 offsetTranslation = decomposeT(bone->offset);
 					glm::vec3 mTransformTranslation = decomposeT(convert_assimp_matrix(aiBone->mTransformation));
@@ -103,9 +97,7 @@ void Skeleton::PrintHeirarchy(Bone* bone)
 	printf("numberOfChildren: %i \n", bone->children.size());
 
 	for(int i = 0; i < bone->children.size(); i++)
-	{
 		PrintHeirarchy(bone->children[i]);
-	}
 }
 
 void Skeleton::UpdateGlobalTransforms(Bone* bone, glm::mat4 parentTransform) 
@@ -116,11 +108,12 @@ void Skeleton::UpdateGlobalTransforms(Bone* bone, glm::mat4 parentTransform)
 	//The keyframes are given in three separate series of values, one each for position, rotation and scaling. 
 	//The transformation matrix computed from these values replaces the node's original transformation matrix at a specific time. 
 	//This means all keys are absolute and not relative to the bone default pose.
-	bone->tempThing = parentTransform * bone->transform;
-	bone->finalTransform = parentTransform * bone->transform * bone->offset;
+	bone->globalTransform = parentTransform * bone->transform;
+	
+	bone->finalTransform = bone->globalTransform * bone->offset;
 
 	for (int i = 0; i < bone->children.size(); i++) 
-		UpdateGlobalTransforms (bone->children[i], parentTransform * bone->transform); 
+		UpdateGlobalTransforms (bone->children[i], bone->globalTransform); 
 }
 
 void Skeleton::Animate(double deltaTime)
@@ -196,22 +189,17 @@ Bone* Skeleton::GetBone(std::string name)
 
 bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 {
-	float distanceThreshold = 1.0f; //1.0f in lander's version
+	float distanceThreshold = 1.0f;
 	
 	std::vector<Bone*> links = ikChains[chainName];
 
 	int tries = 0;
-	int maxTries = steps * (links.size()-1); //so a try does one full iteration up the chain
+	int maxTries = steps * (links.size() - 1); //so a try does one full iteration up the chain
 
 	int effectorIdx = links.size()-1; //Effector is in the last position
 	int linkIdx = effectorIdx - 1; //current link one up from effector
 
-	glm::vec3 T_YZ = glm::vec3(0, T.y, T.z);
-	glm::vec3 T_XY = glm::vec3(T.x, T.y, 0);
-
 	glm::vec3 B, E; //These need to be world positions
-
-	bool is2d = true;
 
 	do
 	{
@@ -225,14 +213,9 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 		if(vectorSquaredDistance(E, T) > distanceThreshold)
 		{
 			glm::vec3 BE = E - B; //vector in the direction of the effector
-			//glm::vec3 BT_YZ = T_YZ - B; //vector in the direction of the target
-			//glm::vec3 BT_XY = T_XY - B; //vector in the direction of the target
-			glm::vec3 BT = T - B;
-
+			glm::vec3 BT = T - B; //vector in the direction of the target
 
 			BE = glm::normalize(BE);
-			//BT_YZ = glm::normalize(BT_YZ);
-			//BT_XY = glm::normalize(BT_XY);
 			BT = glm::normalize(BT);
 
 			double cosAngle = glm::dot(BT, BE);
@@ -242,32 +225,14 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 
 			if(cosAngle < 0.9999f) // IF THE DOT PRODUCT RETURNS 1.0, I DON'T NEED TO ROTATE AS IT IS 0 DEGREES
 			{
-				
 				glm::vec3 rotationAxis = glm::normalize(glm::cross(BE,BT));
-
 				rotationAxis = glm::mat3(glm::inverse(bone->finalTransform * glm::inverse(bone->offset))) * rotationAxis;
 
-				//if(rotationAxis.z < 0)
-					//turnAngle = -turnAngle;
+				rotation = glm::rotate(glm::mat4(1), turnAngle, rotationAxis);
 
-				//rotationAxis = glm::vec3(0,0,1);
-
-					rotation = glm::rotate(glm::mat4(1), turnAngle, rotationAxis);
-
-					bone->transform *= rotation;
-					//bone->transform = bone->finalTransform * glm::inverse(bone->parent->finalTransform);
-					//bone->transform *= rotation;
-
-					//bone->transform = rotation * bone->transform;
-					//UpdateGlobalTransforms(root, glm::mat4(1));
-					UpdateGlobalTransforms(bone, bone->parent->tempThing);
+				bone->transform *= rotation;
+				UpdateGlobalTransforms(bone, bone->parent->globalTransform);
 			}
-
-			//glm::quat myquaternion(glm::vec3(0, 0, turnAngle1));
-			//bone->localTransform = glm::toMat4(myquaternion) * bone->localTransform;
-			//bone->localTransform *= rotation;
-			
-			
 
 			if(--linkIdx < 0)
 				linkIdx = effectorIdx - 1;

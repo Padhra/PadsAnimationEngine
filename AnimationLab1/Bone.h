@@ -57,8 +57,7 @@ class Bone
 
 		glm::mat4 transform;
 		glm::mat4 finalTransform;
-
-		glm::mat4 tempThing;
+		glm::mat4 globalTransform;
 
 		std::vector<PosKeyFrame*> posKeyframes;
 		std::vector<RotKeyFrame*> rotKeyframes;

@@ -53,10 +53,12 @@ class Bone
 		//std::vector<Weight> weights;
 
 		glm::mat4 offset;
-		glm::mat4 inv_offset;
+		//glm::mat4 inv_offset;
 
-		glm::mat4 localTransform;
-		glm::mat4 globalTransform;
+		glm::mat4 transform;
+		glm::mat4 finalTransform;
+
+		glm::mat4 tempThing;
 
 		std::vector<PosKeyFrame*> posKeyframes;
 		std::vector<RotKeyFrame*> rotKeyframes;
@@ -76,7 +78,7 @@ class Bone
 			//	globalTransform[3][2]
 			//)*/
 
-			glm::mat4 matAbs = globalTransform * inv_offset; 
+			glm::mat4 matAbs = finalTransform * glm::inverse(offset); 
 			
 			return glm::vec3
 			(

@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 	//q *= glm::angleAxis(180.0f, glm::vec3(0,1,0));
 	//q *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
 
-	//objectList.push_back(new Model(glm::vec3(0,0,0), /*glm::mat4(1)*/glm::toMat4(q), glm::vec3(.1), MESH_FILE4, shaderManager.GetShaderProgramID("skinned")));
+	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1)/*glm::toMat4(q)*/, glm::vec3(.1), MESH_FILE4, shaderManager.GetShaderProgramID("skinned")));
 	//
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
 	//chain.push_back(objectList[0]->GetSkeleton()->GetBone("fingers.L")); //DO THIS BY NAME - mBoneMapping   //11
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 	objectList.at(0)->GetSkeleton()->DefineIKChain("chain1", chain);
 
 	//TARGET
-	target = new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.1), MESH_FILE3, shaderManager.GetShaderProgramID("diffuse"));
+	target = new Model(glm::vec3(0,0,5), glm::mat4(1), glm::vec3(.1), MESH_FILE3, shaderManager.GetShaderProgramID("diffuse"));
 	objectList.push_back(target);
 
 	/*targetPath.AddKeyframe(-10,		glm::vec3(-5,0,0));
@@ -216,15 +216,15 @@ void update()
 			int testAnimMod = testAnimBone % numbones;
 
 			if(keyStates['g'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->localTransform = glm::rotate(objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->localTransform, 10.0f, glm::vec3(1,0,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform, 10.0f, glm::vec3(1,0,0));
 			else if(keyStates['h'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->localTransform = glm::rotate(objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->localTransform, 10.0f, glm::vec3(-1,0,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform, 10.0f, glm::vec3(-1,0,0));
 
 			if(objectList[i]->GetSkeleton()->hasKeyframes)
 				objectList[i]->GetSkeleton()->Animate(deltaTime); //this overwrites control above
 
-			if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
-				objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
+			//if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
+				//objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
 																															//if no target do nothing?
 		}
 	}
@@ -278,10 +278,13 @@ void draw()
 
 			objectList[i]->GetSkeleton()->UpdateGlobalTransforms(objectList[i]->GetSkeleton()->GetRootBone(), glm::mat4());
 
+			if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
+				objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50);
+
 			for(int boneidx = 0; boneidx < numBones; boneidx++)
 			{
 				Bone* bone = objectList[i]->GetSkeleton()->GetBone(boneidx);
-				boneMatrices[int(bone->id)] = bone->globalTransform;
+				boneMatrices[int(bone->id)] = bone->finalTransform;
 			}
 
 			//Send up-to-date bone matrix data to the shader 
@@ -430,21 +433,21 @@ void printouts()
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
 
 	//PRINT BONE SELECTION
-	ss.str(std::string()); // clear
-	ss << "Selected Bone: [" << testAnimBone%32 << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone%32)->name;
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
+	//ss.str(std::string()); // clear
+	//ss << "Selected Bone: [" << testAnimBone%32 << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone%32)->name;
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
 
 	//PRINT BONES
- //   for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)
-	//{
-	//	Bone* tmp = objectList[0]->GetSkeleton()->GetBones()[boneidx];
+    for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)
+	{
+		Bone* tmp = objectList[0]->GetSkeleton()->GetBones()[boneidx];
 
-	//	ss.str(std::string()); // clear
+		ss.str(std::string()); // clear
 
-	//	ss << std::fixed << std::setprecision(PRECISION) << "bone[" << boneidx << "] = (" << tmp->GetWorldPosition().x << ", " << tmp->GetWorldPosition().y << ", " << tmp->GetWorldPosition().z << ")";
-	//	ss << " -- (" << decomposeT(tmp->globalTransform).x << ", " << decomposeT(tmp->globalTransform).y << ", " << decomposeT(tmp->globalTransform).z << ")";
-	//	drawText(20,20*(boneidx+1), ss.str().c_str());
-	//}
+		ss << std::fixed << std::setprecision(PRECISION) << "bone[" << boneidx << "] = (" << tmp->GetMeshSpacePosition().x << ", " << tmp->GetMeshSpacePosition().y << ", " << tmp->GetMeshSpacePosition().z << ")";
+		ss << " -- (" << decomposeT(tmp->finalTransform).x << ", " << decomposeT(tmp->finalTransform).y << ", " << decomposeT(tmp->finalTransform).z << ")";
+		drawText(20,20*(boneidx+1), ss.str().c_str());
+	}
 
 	//PRINT CAMERA
 	ss.str(std::string()); // clear

@@ -62,7 +62,7 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					bone->parent->children.push_back(bone);
 					
 					bone->offset = convert_assimp_matrix(scene->mMeshes[meshIdx]->mBones[boneIdx]->mOffsetMatrix);
-					bone->inv_offset = glm::inverse(bone->offset);
+					//bone->inv_offset = glm::inverse(bone->offset);
 
 					//aiBone->mTransformation
 					
@@ -80,7 +80,8 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					ss << "\nmTransform: (x:" << mTransformTranslation.x << ", y: " << mTransformTranslation.y << ", z: " << mTransformTranslation.z << ")";
 					std::cout << ss.str();
 
-					bone->localTransform = glm::mat4(1);
+					//bone->transform = glm::mat4(1);
+					bone->transform = convert_assimp_matrix(aiBone->mTransformation);
 
 					root = bone->parent; //The last guy to get in here is the root, as it is depth first
 
@@ -112,23 +113,14 @@ void Skeleton::UpdateGlobalTransforms(Bone* bone, glm::mat4 parentTransform)
 	//We will multiply by the bone offset matrix to use the bone as the pivot point for animation
 	//Move to root transform, apply local translation, then apply all inherited parent translations
 
-	if(hasKeyframes)
-	{
-		//The keyframes are given in three separate series of values, one each for position, rotation and scaling. 
-		//The transformation matrix computed from these values replaces the node's original transformation matrix at a specific time. 
-		//This means all keys are absolute and not relative to the bone default pose.
-		bone->globalTransform = parentTransform * bone->localTransform * bone->offset;
-	
-		for (int i = 0; i < bone->children.size(); i++) 
-			UpdateGlobalTransforms (bone->children[i], parentTransform * bone->localTransform); 
-	}
-	else
-	{
-		bone->globalTransform = parentTransform * bone->inv_offset * bone->localTransform * bone->offset;
+	//The keyframes are given in three separate series of values, one each for position, rotation and scaling. 
+	//The transformation matrix computed from these values replaces the node's original transformation matrix at a specific time. 
+	//This means all keys are absolute and not relative to the bone default pose.
+	bone->tempThing = parentTransform * bone->transform;
+	bone->finalTransform = parentTransform * bone->transform * bone->offset;
 
-		for (int i = 0; i < bone->children.size(); i++) 
-			UpdateGlobalTransforms (bone->children[i], bone->globalTransform); 
-	}
+	for (int i = 0; i < bone->children.size(); i++) 
+		UpdateGlobalTransforms (bone->children[i], parentTransform * bone->transform); 
 }
 
 void Skeleton::Animate(double deltaTime)
@@ -193,7 +185,7 @@ void Skeleton::Animate(double deltaTime)
 			orientation = glm::toMat4(interpolatedquat);
 		}
 
-		bones[boneidx]->localTransform = translation * orientation; 
+		bones[boneidx]->transform = translation * orientation; 
 	}
 }
 
@@ -225,10 +217,10 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 	{
 		Bone* bone = links[linkIdx]; //Bone we're currently working on
 
-		glm::mat4 modelMat = model->GetModelMatrix();
+		//glm::mat4 modelMat = model->GetModelMatrix();
 
-		B = glm::vec3(modelMat * glm::vec4(bone->GetMeshSpacePosition(), 1));
-		E = glm::vec3(modelMat * glm::vec4(links[effectorIdx]->GetMeshSpacePosition(), 1));
+		B = glm::vec3(/*modelMat **/ glm::vec4(bone->GetMeshSpacePosition(), 1));
+		E = glm::vec3(/*modelMat **/ glm::vec4(links[effectorIdx]->GetMeshSpacePosition(), 1));
 
 		if(vectorSquaredDistance(E, T) > distanceThreshold)
 		{
@@ -253,37 +245,22 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 				
 				glm::vec3 rotationAxis = glm::normalize(glm::cross(BE,BT));
 
-				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
-
-				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
-				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
-				//rotationAxis = glm::mat3(glm::inverse(bone->inv_offset * bone->globalTransform * modelMat)) * rotationAxis;
-
-				glm::mat4 off = bone->inv_offset;
-
-				rotationAxis = glm::inverse(glm::mat3(bone->globalTransform * off * modelMat)) * rotationAxis;
-				
-				
-				//rotationAxis = glm::mat3(bone->inv_offset * bone->globalTransform * modelMat) * rotationAxis;
-				//rotationAxis = glm::mat3(bone->inv_offset * bone->globalTransform * modelMat) * rotationAxis;
-
-
-				//rotationAxis = glm::mat3(glm::inverse(bone->globalTransform)) * rotationAxis;
+				rotationAxis = glm::mat3(glm::inverse(bone->finalTransform * glm::inverse(bone->offset))) * rotationAxis;
 
 				//if(rotationAxis.z < 0)
 					//turnAngle = -turnAngle;
 
 				//rotationAxis = glm::vec3(0,0,1);
 
-				//if ((rotationAxis != glm::vec3()) && rotationAxis == rotationAxis)
-				//{
 					rotation = glm::rotate(glm::mat4(1), turnAngle, rotationAxis);
-				
-					assert(rotation == rotation);
-					
-					bone->localTransform = rotation * bone->localTransform;
-					UpdateGlobalTransforms(bone, bone->parent->globalTransform);
-				//}
+
+					bone->transform *= rotation;
+					//bone->transform = bone->finalTransform * glm::inverse(bone->parent->finalTransform);
+					//bone->transform *= rotation;
+
+					//bone->transform = rotation * bone->transform;
+					//UpdateGlobalTransforms(root, glm::mat4(1));
+					UpdateGlobalTransforms(bone, bone->parent->tempThing);
 			}
 
 			//glm::quat myquaternion(glm::vec3(0, 0, turnAngle1));

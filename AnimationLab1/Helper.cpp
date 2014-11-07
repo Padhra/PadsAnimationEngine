@@ -76,8 +76,7 @@ glm::mat4 convert_assimp_matrix(aiMatrix4x4 from)
  * @param rotation (out) rotation matrix
  * @param translation (out) translation vector
  */
-void decomposeTRS(const glm::mat4& m, glm::vec3& scaling,
-        glm::mat4& rotation, glm::vec3& translation)
+void decomposeTRS(const glm::mat4& m, glm::vec3& translation, glm::mat4& rotation, glm::vec3& scaling)
 {
     // Extract the translation
     translation.x = m[3][0];

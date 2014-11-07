@@ -142,43 +142,68 @@ int main(int argc, char** argv)
 	glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 	glEnableVertexAttribArray (0);
 
+	int index;
+
 	//KEYFRAMED HAND
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), MESH_FILE1, shaderManager.GetShaderProgramID("skinned")));
 	
 	//BOB
-	//glm::quat q = glm::quat();
-	//	
-	//q *= glm::angleAxis(270.0f, glm::vec3(1,0,0));
-	//q *= glm::angleAxis(180.0f, glm::vec3(0,1,0));
-	//q *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
+	glm::quat q = glm::quat();
+		
+	q *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
+	q *= glm::angleAxis(270.0f, glm::vec3(0,1,0));
+	q *= glm::angleAxis(0.0f, glm::vec3(0,0,1));
 
-	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1)/*glm::toMat4(q)*/, glm::vec3(.1), MESH_FILE4, shaderManager.GetShaderProgramID("skinned")));
-	//
-	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
-	//chain.push_back(objectList[0]->GetSkeleton()->GetBone("fingers.L")); //DO THIS BY NAME - mBoneMapping   //11
-	//
-	//for(int i = 0; i < 3; i++)
-	//	chain.push_back(chain[chain.size()-1]->parent);
-	//std::reverse(chain.begin(),chain.end());
+	objectList.push_back(new Model(glm::vec3(-5,0,0), glm::toMat4(q), glm::vec3(.1), MESH_FILE4, shaderManager.GetShaderProgramID("skinned")));
+	index = objectList.size()-1;
+	
+	std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
+	
+	Bone* fingersL = objectList[index]->GetSkeleton()->GetBone("fingers.L");
+	//fingersL->dofLimits.SetXLimits(-90, 18);
+	//fingersL->dofLimits.SetYLimits(0,0);
+	chain.push_back(fingersL); 
+	
+	Bone* wristL = fingersL->parent;
+	//wristL->dofLimits.SetXLimits(-51, 68);
+	//wristL->dofLimits.SetYLimits(0, 0);
+	//wristL->dofLimits.SetZLimits(-20, 20);
+	chain.push_back(wristL); 
 
-	//objectList.at(0)->GetSkeleton()->DefineIKChain("chain1", chain);
+	Bone* forearmL = wristL->parent;
+	//forearmL->dofLimits.SetXLimits(0, 0);
+	//forearmL->dofLimits.SetZLimits(0, 114);
+	chain.push_back(forearmL); 
+
+	Bone* upperArmL = forearmL->parent;
+	//upperArmL->dofLimits.SetXLimits(-60, -40);
+	//upperArmL->dofLimits.SetYLimits(0, 0);
+	//upperArmL->dofLimits.SetZLimits(-80, 50);
+	chain.push_back(upperArmL); 
+	
+	/*for(int i = 0; i < 3; i++)
+		chain.push_back(chain[chain.size()-1]->parent);*/
+	std::reverse(chain.begin(),chain.end());
+	objectList.at(index)->GetSkeleton()->DefineIKChain("chain1", chain);
 	
 	//CONES
-	glm::quat q = glm::angleAxis(-90.0f, glm::vec3(1,0,0));
-	objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1)/*glm::toMat4(q)*/, glm::vec3(1), MESH_FILE5, shaderManager.GetShaderProgramID("skinned")));
+	q = glm::angleAxis(-90.0f, glm::vec3(1,0,0));
+	objectList.push_back(new Model(glm::vec3(5,0,0), glm::toMat4(q), glm::vec3(1), MESH_FILE5, shaderManager.GetShaderProgramID("skinned")));
+	index = objectList.size()-1;
 
-	std::vector<Bone*> chain; 
-	chain.push_back(objectList[0]->GetSkeleton()->GetBones()[3]); 
-	chain.push_back(objectList[0]->GetSkeleton()->GetBones()[2]); 
-	chain.push_back(objectList[0]->GetSkeleton()->GetBones()[1]);
-	chain.push_back(objectList[0]->GetSkeleton()->GetBones()[0]); //effector
-	objectList.at(0)->GetSkeleton()->DefineIKChain("chain1", chain);
+	std::vector<Bone*> coneChain;
+
+	coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[3]); 
+	coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[2]); 
+	coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[1]);
+	coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[0]); //effector
+	objectList.at(index)->GetSkeleton()->DefineIKChain("chain1", coneChain);
 
 	//TARGET
 	target = new Model(glm::vec3(0,0,5), glm::mat4(1), glm::vec3(.1), MESH_FILE3, shaderManager.GetShaderProgramID("diffuse"));
 	objectList.push_back(target);
 
-	/*targetPath.AddKeyframe(-10,		glm::vec3(-5,0,0));
+	targetPath.AddKeyframe(-10,		glm::vec3(-5,0,0));
 	targetPath.AddKeyframe(0,		glm::vec3(5,2,0));
 	targetPath.AddKeyframe(10,		glm::vec3(-5,4,0));
 	targetPath.AddKeyframe(20,		glm::vec3(5,6,0));
@@ -186,7 +211,7 @@ int main(int argc, char** argv)
 	targetPath.AddKeyframe(40,		glm::vec3(5,10,0));
 	targetPath.AddKeyframe(50,		glm::vec3(-5,12,0));
 	targetPath.AddKeyframe(60,		glm::vec3(5,14,0));
-	targetPath.AddKeyframe(70,		glm::vec3(-5,16,0));*/
+	targetPath.AddKeyframe(70,		glm::vec3(-5,16,0));
 
 	glutMainLoop();
     
@@ -208,24 +233,35 @@ void update()
 		frames = frameCounterTime = 0;
 	}
 
+	//Animation
 	for(int i = 0; i< objectList.size(); i++)
 	{
 		if(objectList[i]->HasSkeleton())
 		{
 			int numbones = objectList[i]->GetSkeleton()->GetBones().size();
 			int testAnimMod = testAnimBone % numbones;
+			Bone* bone = objectList[i]->GetSkeleton()->GetBones()[testAnimMod];
+
+			if(keyStates['t'])
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(1,0,0));
+			else if(keyStates['y'])
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(-1,0,0));
 
 			if(keyStates['g'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform, 10.0f, glm::vec3(1,0,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,1,0));
 			else if(keyStates['h'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform, 10.0f, glm::vec3(-1,0,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,-1,0));
 
+			if(keyStates['v'])
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,0,1));
+			else if(keyStates['b'])
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,0,-1));
+
+			if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
+				objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
+																													//if no target do nothing?
 			if(objectList[i]->GetSkeleton()->hasKeyframes)
 				objectList[i]->GetSkeleton()->Animate(deltaTime); //this overwrites control above
-
-			//if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
-				//objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
-																															//if no target do nothing?
 		}
 	}
 
@@ -234,14 +270,9 @@ void update()
 	//for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 	//std::cout << it->first << " => " << it->second << '\n';
 
-	/*if(objectList[i]->GetSkeleton()->hasKeyframes)
-	{
-		ss << "AnimationTimer: " << objectList[i]->GetSkeleton()->GetAnimationTimer();
-		drawText(20,50, ss.str().c_str());
-	}*/
+	
 
 	//targetPath.Update(deltaTime);
-
 	//target->worldProperties.translation = targetPath.GetPosition();
 
 	processInput();
@@ -277,9 +308,6 @@ void draw()
 				boneMatrices[j] = glm::mat4(1);
 
 			objectList[i]->GetSkeleton()->UpdateGlobalTransforms(objectList[i]->GetSkeleton()->GetRootBone(), glm::mat4());
-
-			if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
-				objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50);
 
 			for(int boneidx = 0; boneidx < numBones; boneidx++)
 			{
@@ -319,25 +347,6 @@ void draw()
 			glDrawArrays(GL_TRIANGLES, 0, objectList.at(i)->GetVertexCount());	
 		}
 	}	
-	
-
-	//glm::vec3 rotAxis = glm::cross(glm::vec3(0,1,0), glm::vec3(0,0,1));  //Cross product, this gives the axis of rotation
-    //double cosAngle = glm::dot(glm::vec3(0,1,0), glm::vec3(0,0,1)); //Cosine of the angle between vectors
-	//double angle = glm::acos(cosAngle);
-
-	//rotAxis = glm::normalize(rotAxis);
- 
-	//glm::quat q = glm::angleAxis(angle, rotAxis);
-   
-	//A_n = normalize(A);
-//Now you can build a quaternion with angle and A_n.
-
-   // q = (A_n.x i + A_n.y j + A_n.z k)*sin(angle/2) + cos(angle/2);
-
-	//glm::mat4 MVP = projectionMatrix * viewMatrix * glm::rotate(;
-
-	//int mvpMatrixLocation = glGetUniformLocation(shaderManager.GetShaderProgramID("diffuse"), "mvpMatrix"); // Get the location of our projection matrix in the shader
-	//glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP/*&MVP[0][0]*/)); // Send our model/view/projection matrix to the shader
 
 	glUseProgram(shaderManager.GetShaderProgramID("diffuse"));
 	glBindVertexArray( line_vao );
@@ -400,20 +409,17 @@ void processInput()
 		camera.viewProperties.position += glm::cross(camera.viewProperties.forward, camera.viewProperties.up) * float(deltaTime) * camera.moveSpeed;
 
 	if(keyStates['u'])
-		target->worldProperties.translation += glm::vec3(0,0,1) * targetSpeed * float(deltaTime);
+		target->worldProperties.translation += glm::vec3(1,0,0) * targetSpeed * float(deltaTime);
 	if(keyStates['i'])
-		target->worldProperties.translation += glm::vec3(0,0,-1) * targetSpeed * float(deltaTime);
+		target->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
 	if(keyStates['j'])
 		target->worldProperties.translation += glm::vec3(0,1,0) * targetSpeed * float(deltaTime);
 	if(keyStates['k'])
 		target->worldProperties.translation += glm::vec3(0,-1,0) * targetSpeed * float(deltaTime);
 	if(keyStates['n'])
-		target->worldProperties.translation += glm::vec3(1,0,0) * targetSpeed * float(deltaTime);
+		target->worldProperties.translation += glm::vec3(0,0,1) * targetSpeed * float(deltaTime);
 	if(keyStates['m'])
-		target->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
-
-	//objectList[0]->worldProperties.orientation *= glm::toMat4(glm::angleAxis(1.0f, glm::vec3(0,1,0)));
-
+		target->worldProperties.translation += glm::vec3(0,0,-1) * targetSpeed * float(deltaTime);
 }
 
 void printouts()
@@ -429,25 +435,44 @@ void printouts()
 	//PRINT TARGET POSITION
 	ss.str(std::string()); // clear
 	ss << std::fixed << std::setprecision(PRECISION) << "target (x: " << target->worldProperties.translation.x << ", y: " 
-		<< target->worldProperties.translation.y << ", z: " << target->worldProperties.translation.z << ")";
+		<< target->worldProperties.translation.y << ", z: " << target->worldProperties.translation.z << ") - (u/i , j/k, n/m)";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
 
 	//PRINT BONE SELECTION
+	Bone* bone = objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size());
+
+	ss.str(std::string()); // clear
+	ss << "Selected Bone: [" << int(bone->id) << "] " << bone->name << " (-/+)";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
+	
+	ss.str(std::string()); // clear
+	ss << "x Angle: " << bone->GetEulerAngles().x << " (t/y)";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),60, ss.str().c_str());
+	ss.str(std::string()); // clear
+	ss << "y Angle: " << bone->GetEulerAngles().y << " (g/h)";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),40, ss.str().c_str());
+	ss.str(std::string()); // clear
+	ss << "z Angle: " << bone->GetEulerAngles().z << " (v/b)";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
+
 	//ss.str(std::string()); // clear
-	//ss << "Selected Bone: [" << testAnimBone%32 << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone%32)->name;
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
+	//ss << "Selected Bone: [" << testAnimBone % objectList[0]->GetSkeleton()->GetBones().size() << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size())->name;
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
+	//ss.str(std::string()); // clear
+	//ss << "Selected Bone: [" << testAnimBone % objectList[0]->GetSkeleton()->GetBones().size() << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size())->name;
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
 
 	//PRINT BONES
-    for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)
-	{
-		Bone* tmp = objectList[0]->GetSkeleton()->GetBones()[boneidx];
+ //   for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)
+	//{
+	//	Bone* tmp = objectList[0]->GetSkeleton()->GetBones()[boneidx];
 
-		ss.str(std::string()); // clear
+	//	ss.str(std::string()); // clear
 
-		ss << std::fixed << std::setprecision(PRECISION) << "bone[" << boneidx << "] = (" << tmp->GetMeshSpacePosition().x << ", " << tmp->GetMeshSpacePosition().y << ", " << tmp->GetMeshSpacePosition().z << ")";
-		ss << " -- (" << decomposeT(tmp->finalTransform).x << ", " << decomposeT(tmp->finalTransform).y << ", " << decomposeT(tmp->finalTransform).z << ")";
-		drawText(20,20*(boneidx+1), ss.str().c_str());
-	}
+	//	ss << std::fixed << std::setprecision(PRECISION) << "bone[" << boneidx << "] = (" << tmp->GetMeshSpacePosition().x << ", " << tmp->GetMeshSpacePosition().y << ", " << tmp->GetMeshSpacePosition().z << ")";
+	//	ss << " -- (" << decomposeT(tmp->finalTransform).x << ", " << decomposeT(tmp->finalTransform).y << ", " << decomposeT(tmp->finalTransform).z << ")";
+	//	drawText(20,20*(boneidx+1), ss.str().c_str());
+	//}
 
 	//PRINT CAMERA
 	ss.str(std::string()); // clear
@@ -461,6 +486,13 @@ void printouts()
 	ss.str(std::string()); // clear
 	ss << "camera.up: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.up.x << ", " << camera.viewProperties.up.y << ", " << camera.viewProperties.up.z << ")";
 	drawText(20,WINDOW_HEIGHT-60, ss.str().c_str());
+
+	//PRINT ANIMATION TIMER
+	/*if(objectList[i]->GetSkeleton()->hasKeyframes)
+	{
+		ss << "AnimationTimer: " << objectList[i]->GetSkeleton()->GetAnimationTimer();
+		drawText(20,50, ss.str().c_str());
+	}*/
 }
 
 

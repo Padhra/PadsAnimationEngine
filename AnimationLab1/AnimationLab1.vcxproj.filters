@@ -25,6 +25,9 @@
     <Filter Include="Source Files\Model">
       <UniqueIdentifier>{4252df49-03dc-49bb-9291-d8f0ab89bdca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Spline">
+      <UniqueIdentifier>{48e2eed7-b05a-4bae-ad87-1332c177339f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -74,11 +77,11 @@
     <ClInclude Include="Skeleton.h">
       <Filter>Header Files\Model</Filter>
     </ClInclude>
-    <ClInclude Include="Spline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Line.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Spline.h">
+      <Filter>Header Files\Spline</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

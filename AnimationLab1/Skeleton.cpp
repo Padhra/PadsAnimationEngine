@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iostream>
 #include "Model.h"
+#include <glm/gtx/euler_angles.hpp>
 
 Skeleton::Skeleton(Model* p_myModel, const aiMesh* p_mesh, bool keyframes)
 {
@@ -60,7 +61,7 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					bone->parent->children.push_back(bone);
 					
 					bone->offset = convert_assimp_matrix(scene->mMeshes[meshIdx]->mBones[boneIdx]->mOffsetMatrix);
-					//bone->inv_offset = glm::inverse(bone->offset);
+					bone->inv_offset = glm::inverse(bone->offset);
 
 					glm::vec3 offsetTranslation = decomposeT(bone->offset);
 					glm::vec3 mTransformTranslation = decomposeT(convert_assimp_matrix(aiBone->mTransformation));
@@ -189,7 +190,7 @@ Bone* Skeleton::GetBone(std::string name)
 
 bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 {
-	float distanceThreshold = 1.0f;
+	float distanceThreshold = 0.01f;
 	
 	std::vector<Bone*> links = ikChains[chainName];
 
@@ -201,16 +202,17 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 
 	glm::vec3 B, E; //These need to be world positions
 
+	glm::mat4 modelMat = model->GetModelMatrix(); //Grab the model matrix out here as it won't be changing
+	Bone* effector = links[effectorIdx];
+
 	do
 	{
 		Bone* bone = links[linkIdx]; //Bone we're currently working on
 
-		//glm::mat4 modelMat = model->GetModelMatrix();
+		B = glm::vec3(modelMat * glm::vec4(bone->GetMeshSpacePosition(), 1));
+		E = glm::vec3(modelMat * glm::vec4(effector->GetMeshSpacePosition(), 1));
 
-		B = glm::vec3(/*modelMat **/ glm::vec4(bone->GetMeshSpacePosition(), 1));
-		E = glm::vec3(/*modelMat **/ glm::vec4(links[effectorIdx]->GetMeshSpacePosition(), 1));
-
-		if(vectorSquaredDistance(E, T) > distanceThreshold)
+		if(glm::distance(E, T) > distanceThreshold)
 		{
 			glm::vec3 BE = E - B; //vector in the direction of the effector
 			glm::vec3 BT = T - B; //vector in the direction of the target
@@ -226,11 +228,14 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 			if(cosAngle < 0.9999f) // IF THE DOT PRODUCT RETURNS 1.0, I DON'T NEED TO ROTATE AS IT IS 0 DEGREES
 			{
 				glm::vec3 rotationAxis = glm::normalize(glm::cross(BE,BT));
-				rotationAxis = glm::mat3(glm::inverse(bone->finalTransform * glm::inverse(bone->offset))) * rotationAxis;
+				rotationAxis = glm::mat3(glm::inverse(modelMat * bone->finalTransform * bone->inv_offset)) * rotationAxis;
 
 				rotation = glm::rotate(glm::mat4(1), turnAngle, rotationAxis);
 
 				bone->transform *= rotation;
+
+				ImposeDOFRestrictions(bone);
+
 				UpdateGlobalTransforms(bone, bone->parent->globalTransform);
 			}
 
@@ -253,3 +258,50 @@ void Skeleton::DefineIKChain(std::string name, std::vector<Bone*> chain)
 	ikChains[name] = chain;
 }
 
+void Skeleton::ImposeDOFRestrictions(Bone* bone)
+{
+	glm::vec3 translation;
+	glm::mat4 rotation; 
+	glm::vec3 scaling;
+	
+	decomposeTRS(bone->transform, translation, rotation, scaling); 
+
+/*      [0] [1] [2] [3]
+ * [0] | 1   0   0   T1 | | R11 R12 R13 0 | | a 0 0 0 |   | aR11 bR12 cR13 T1 |
+ * [1] | 0   1   0   T2 |.| R21 R22 R23 0 |.| 0 b 0 0 | = | aR21 bR22 cR23 T2 |
+ * [2] | 0   0   0   T3 | | R31 R32 R33 0 | | 0 0 c 0 |   | aR31 bR32 cR33 T3 |
+ * [3] | 0   0   0   1  | |  0   0   0  1 | | 0 0 0 1 |   |  0    0    0    1 |*/
+
+	glm::vec3 euler = glm::eulerAngles(glm::toQuat(rotation));
+	
+	if(bone->dofLimits.xAxis) 
+	{
+		if(euler.x > 180.0f)
+			euler.x -= 360.0f;
+
+		euler.x = glm::clamp(euler.x, bone->dofLimits.xMin, bone->dofLimits.xMax);
+	}
+		
+	if(bone->dofLimits.yAxis) 
+	{
+		if(euler.y > 180.0f)
+			euler.y -= 360.0f;
+		euler.y = glm::clamp(euler.y, bone->dofLimits.yMin, bone->dofLimits.yMax);
+	}
+		
+	if(bone->dofLimits.zAxis) 
+	{
+		if(euler.z > 180.0f)
+			euler.z -= 360.0f;
+		euler.z = glm::clamp(euler.z, bone->dofLimits.zMin, bone->dofLimits.zMax);
+	}
+
+	glm::mat4 copy = rotation;
+	
+    euler = glm::radians(euler);
+	rotation = glm::eulerAngleZ(euler.z) * glm::eulerAngleY(euler.y) * glm::eulerAngleX(euler.x);
+
+	bone->transform = glm::translate(glm::mat4(1.0f), translation) 
+				* rotation
+				* glm::scale(glm::mat4(1.0f), scaling);
+}

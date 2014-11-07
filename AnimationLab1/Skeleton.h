@@ -60,6 +60,7 @@ class Skeleton
 		
 		bool ComputeIK(std::string chainName, glm::vec3 D, int steps);
 		void DefineIKChain(std::string name, std::vector<Bone*> chain);
+		void ImposeDOFRestrictions(Bone* bone);
 
 		void UpdateGlobalTransforms(Bone* bone, glm::mat4 parentTransform);
 

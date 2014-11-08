@@ -61,6 +61,11 @@ class Spline
 			nodes.push_back(node);
 		}
 
+		void DeleteNode(Node* node) 
+		{
+			nodes.erase(std::remove(nodes.begin(), nodes.end(), node), nodes.end());
+		}
+
 		void Update(double deltaTime)
 		{
 			timer += deltaTime/1000 * speedScalar;

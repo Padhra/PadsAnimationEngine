@@ -411,6 +411,15 @@ void keyPressed (unsigned char key, int x, int y)
 			targetPath.SetMode(InterpolationMode::Linear);
 		else
 			targetPath.SetMode(InterpolationMode::Cubic);
+	if(key == 'j')
+	{
+		if(targetPath.nodes.size() > 0)
+		{
+			Node* node = targetPath.nodes[selectedTarget % targetPath.nodes.size()];
+			objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
+			targetPath.DeleteNode(node);
+		}
+	}
 
 	//SKELETAL CONTROLS
 	if(key == 'b')
@@ -638,7 +647,7 @@ void printouts()
 	drawText(20,80, ss.str().c_str());
 
 	ss.str(std::string());
-	ss << "|-| Delete selected node ";
+	ss << "|j| Delete selected node ";
 	drawText(20,60, ss.str().c_str());
 
 	ss.str(std::string());

@@ -16,6 +16,7 @@
 #include "Model.h"
 #include "ShaderManager.h"
 #include "Spline.h"
+#include "Node.h"
 
 #include <string> 
 #include <fstream>
@@ -37,15 +38,22 @@
 
 using namespace std;
 
-void processInput();
+void processContinuousInput();
 void printouts();
 
 //Callbacks
 void keyPressed (unsigned char key, int x, int y); 
 void keyUp (unsigned char key, int x, int y); 
 void passiveMouseMotion(int x, int y);
+void handleSpecialKeypress(int key, int x, int y);
+void handleSpecialKeyReleased(int key, int x, int y);
 void update();
 void draw();
+
+bool isRightKeyPressed = false;
+bool isLeftKeyPressed = false;
+bool isUpKeyPressed = false;
+bool isDownKeyPressed = false;
 
 bool keyStates[256] = {false}; // Create an array of boolean values of length 256 (0-255)
 
@@ -72,10 +80,15 @@ float targetSpeed = 0.01f;
 Spline targetPath;
 
 int testAnimBone = 0;
+int selectedTarget = 0;
 
 GLuint line_vao;
 
 std::vector<glm::vec3> lines;
+
+short uiMode = 0;
+enum UIMode { boneSelect = 0, xAngle, yAngle, zAngle, nodeSelect, nodeMove, lerpMode, targetMove, splineSpeed };
+bool altDirectional = false;
 
 int main(int argc, char** argv)
 {
@@ -95,6 +108,8 @@ int main(int argc, char** argv)
 	//glutReshapeFunc (reshape);
 	glutKeyboardFunc(keyPressed); // Tell GLUT to use the method "keyPressed" for key presses  
 	glutKeyboardUpFunc(keyUp); // Tell GLUT to use the method "keyUp" for key up events  
+	glutSpecialFunc(handleSpecialKeypress);
+	glutSpecialUpFunc(handleSpecialKeyReleased);
 	//glutMouseFunc (MouseButton);
 	//glutMotionFunc (MouseMotion);
 	glutPassiveMotionFunc(passiveMouseMotion);
@@ -127,6 +142,9 @@ int main(int argc, char** argv)
 
 	shaderManager.CreateShaderProgram("skinned", "Shaders/skinned.vs", "Shaders/skinned.ps");
 	shaderManager.CreateShaderProgram("diffuse", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
+
+	Node::objectList = &objectList;
+	Node::shaderManager = &shaderManager;
 
 	//LINE
 	glGenVertexArrays(1, &line_vao);
@@ -203,15 +221,7 @@ int main(int argc, char** argv)
 	target = new Model(glm::vec3(0,0,5), glm::mat4(1), glm::vec3(.1), MESH_FILE3, shaderManager.GetShaderProgramID("diffuse"));
 	objectList.push_back(target);
 
-	targetPath.AddKeyframe(-10,		glm::vec3(-5,0,0));
-	targetPath.AddKeyframe(0,		glm::vec3(5,2,0));
-	targetPath.AddKeyframe(10,		glm::vec3(-5,4,0));
-	targetPath.AddKeyframe(20,		glm::vec3(5,6,0));
-	targetPath.AddKeyframe(30,		glm::vec3(-5,8,0));
-	targetPath.AddKeyframe(40,		glm::vec3(5,10,0));
-	targetPath.AddKeyframe(50,		glm::vec3(-5,12,0));
-	targetPath.AddKeyframe(60,		glm::vec3(5,14,0));
-	targetPath.AddKeyframe(70,		glm::vec3(-5,16,0));
+	targetPath.SetMode(InterpolationMode::Cubic);
 
 	glutMainLoop();
     
@@ -238,24 +248,25 @@ void update()
 	{
 		if(objectList[i]->HasSkeleton())
 		{
+			//TODO - If animationMode == IK .. and so on
 			int numbones = objectList[i]->GetSkeleton()->GetBones().size();
 			int testAnimMod = testAnimBone % numbones;
 			Bone* bone = objectList[i]->GetSkeleton()->GetBones()[testAnimMod];
 
-			if(keyStates['t'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(1,0,0));
-			else if(keyStates['y'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(-1,0,0));
+			if(uiMode == UIMode::xAngle && isLeftKeyPressed)
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(1,0,0));
+			else if(uiMode == UIMode::xAngle && isRightKeyPressed)
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(-1,0,0));
 
-			if(keyStates['g'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,1,0));
-			else if(keyStates['h'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,-1,0));
+			if(uiMode == UIMode::yAngle && isLeftKeyPressed)
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,1,0));
+			else if(uiMode == UIMode::yAngle && isRightKeyPressed)
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,-1,0));
 
-			if(keyStates['v'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,0,1));
-			else if(keyStates['b'])
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 10.0f, glm::vec3(0,0,-1));
+			if(uiMode == UIMode::zAngle && isLeftKeyPressed)
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,0,1));
+			else if(uiMode == UIMode::zAngle && isRightKeyPressed)
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,0,-1));
 
 			if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
 				objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
@@ -270,12 +281,13 @@ void update()
 	//for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 	//std::cout << it->first << " => " << it->second << '\n';
 
-	
+	if(targetPath.nodes.size() > 0 && uiMode != UIMode::targetMove)
+	{
+		targetPath.Update(deltaTime);
+		target->worldProperties.translation = targetPath.GetPosition();
+	}
 
-	//targetPath.Update(deltaTime);
-	//target->worldProperties.translation = targetPath.GetPosition();
-
-	processInput();
+	processContinuousInput();
 	draw();
 }
 
@@ -294,7 +306,7 @@ void draw()
 
 		glm::mat4 MVP = projectionMatrix * viewMatrix * objectList.at(i)->GetModelMatrix();
 
-		int mvpMatrixLocation = glGetUniformLocation(objectList[i]->GetShaderProgramID(), "mvpMatrix"); // Get the location of our projection matrix in the shader
+		int mvpMatrixLocation = glGetUniformLocation(objectList[i]->GetShaderProgramID(), "mvpMatrix"); // Get the location of our mvp matrix in the shader
 		glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP/*&MVP[0][0]*/)); // Send our model/view/projection matrix to the shader
 		
 		if(objectList[i]->HasSkeleton())
@@ -348,9 +360,23 @@ void draw()
 		}
 	}	
 
-	glUseProgram(shaderManager.GetShaderProgramID("diffuse"));
-	glBindVertexArray( line_vao );
-	glDrawArrays(GL_LINES, 0, lines.size()*2 );
+	if(targetPath.nodes.size() > 0)
+	{
+		glUseProgram(shaderManager.GetShaderProgramID("diffuse"));
+	
+		float green[4] = {0,1,0,1}; float red[4] = {1,0,0,1};
+		int uniformColourLocation = glGetUniformLocation(shaderManager.GetShaderProgramID("diffuse"), "uniformColour"); 
+		glUniform4fv(uniformColourLocation, 1, green);
+
+		glm::mat4 MVP = projectionMatrix * viewMatrix * targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->GetModelMatrix();
+		int mvpMatrixLocation = glGetUniformLocation(shaderManager.GetShaderProgramID("diffuse"), "mvpMatrix"); // Get the location of our mvp matrix in the shader
+		glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP/*&MVP[0][0]*/)); // Send our model/view/projection matrix to the shader
+
+		glBindVertexArray( line_vao );
+		glDrawArrays(GL_LINES, 0, lines.size()*2 );
+
+		glUniform4fv(uniformColourLocation, 1, red);
+	}
 
 	printouts();
 
@@ -361,11 +387,40 @@ void keyPressed (unsigned char key, int x, int y)
 {  
 	keyStates[key] = true; // Set the state of the current key to pressed  
 
-	if(key == '+')
-		testAnimBone++;
-	else if(key == '-')
-		if(testAnimBone > 0)
-			testAnimBone--;
+	if(key == 32)
+		altDirectional = !altDirectional;
+
+	//SPLINE EDITOR
+	if(key == 'o')
+		targetPath.Save();
+	if(key == 'l')
+		targetPath.Load();
+	if(key == 'p')
+		targetPath.AddNode(new Node(glm::vec3(0,0,0)));
+	if(key == 't')
+		if (uiMode != UIMode::targetMove)
+			uiMode = UIMode::targetMove;
+		else
+			uiMode = -1;
+	if(key == 'n')
+		uiMode = UIMode::nodeSelect;
+	if(key == 'm')
+		uiMode = UIMode::nodeMove;
+	if(key == 'i')
+		if(targetPath.mode == InterpolationMode::Cubic)
+			targetPath.SetMode(InterpolationMode::Linear);
+		else
+			targetPath.SetMode(InterpolationMode::Cubic);
+
+	//SKELETAL CONTROLS
+	if(key == 'b')
+		uiMode = UIMode::boneSelect;
+	if(key == 'x')
+		uiMode = UIMode::xAngle;
+	if(key == 'y')
+		uiMode = UIMode::yAngle;
+	if(key == 'z')
+		uiMode = UIMode::zAngle;
 }  
   
 void keyUp (unsigned char key, int x, int y) 
@@ -388,10 +443,71 @@ void passiveMouseMotion(int x, int y)
 	just_warped = true;
 }
 
+void handleSpecialKeypress(int key, int x, int y)
+{
+
+	if(glutGetModifiers() == GLUT_ACTIVE_CTRL);
+
+	switch (key) 
+	{
+		case GLUT_KEY_LEFT:
+
+			if(uiMode == UIMode::boneSelect)
+				testAnimBone--;
+			else if(uiMode == UIMode::nodeSelect)
+				selectedTarget--;
+			
+			isLeftKeyPressed = true;
+
+			break;
+
+		case GLUT_KEY_RIGHT:
+
+			if(uiMode == UIMode::boneSelect)
+				testAnimBone++;
+			else if(uiMode == UIMode::nodeSelect)
+				selectedTarget++;
+
+			isRightKeyPressed = true;
+			
+			break;
+
+		case GLUT_KEY_UP:
+			isUpKeyPressed = true;
+			break;
+
+		case GLUT_KEY_DOWN:
+			isDownKeyPressed = true;
+			break;
+	}
+}
+
+void handleSpecialKeyReleased(int key, int x, int y) 
+{
+	switch (key) 
+	{
+		case GLUT_KEY_LEFT:
+			isLeftKeyPressed = false;
+			break;
+
+		case GLUT_KEY_RIGHT:
+			isRightKeyPressed = false;
+			break;
+
+		case GLUT_KEY_UP:
+			isUpKeyPressed = false;
+			break;
+
+		case GLUT_KEY_DOWN:
+			isDownKeyPressed = false;
+			break;
+	}
+}
+
 // OTHER FUNCTIONS
 
 //Process keystates
-void processInput()
+void processContinuousInput()
 {
 	if(keyStates[27])
 		exit(0);
@@ -408,18 +524,37 @@ void processInput()
 	if(keyStates['d'])
 		camera.viewProperties.position += glm::cross(camera.viewProperties.forward, camera.viewProperties.up) * float(deltaTime) * camera.moveSpeed;
 
-	if(keyStates['u'])
-		target->worldProperties.translation += glm::vec3(1,0,0) * targetSpeed * float(deltaTime);
-	if(keyStates['i'])
-		target->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
-	if(keyStates['j'])
-		target->worldProperties.translation += glm::vec3(0,1,0) * targetSpeed * float(deltaTime);
-	if(keyStates['k'])
-		target->worldProperties.translation += glm::vec3(0,-1,0) * targetSpeed * float(deltaTime);
-	if(keyStates['n'])
-		target->worldProperties.translation += glm::vec3(0,0,1) * targetSpeed * float(deltaTime);
-	if(keyStates['m'])
-		target->worldProperties.translation += glm::vec3(0,0,-1) * targetSpeed * float(deltaTime);
+	if(uiMode == UIMode::targetMove)
+	{
+		if(isLeftKeyPressed)
+			target->worldProperties.translation += glm::vec3(1,0,0) * targetSpeed * float(deltaTime);
+		if(isRightKeyPressed)
+			target->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
+		if(isUpKeyPressed && !altDirectional)
+			target->worldProperties.translation += glm::vec3(0,1,0) * targetSpeed * float(deltaTime);
+		if(isDownKeyPressed && !altDirectional)
+			target->worldProperties.translation += glm::vec3(0,-1,0) * targetSpeed * float(deltaTime);
+		if(isUpKeyPressed && altDirectional)
+			target->worldProperties.translation += glm::vec3(0,0,1) * targetSpeed * float(deltaTime);
+		if(isDownKeyPressed && altDirectional)
+			target->worldProperties.translation += glm::vec3(0,0,-1) * targetSpeed * float(deltaTime);
+	}
+
+	if(targetPath.nodes.size() > 0 && uiMode == UIMode::nodeMove)
+	{
+		if(isLeftKeyPressed)
+			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(1,0,0) * targetSpeed * float(deltaTime);
+		if(isRightKeyPressed)
+			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
+		if(isUpKeyPressed && !altDirectional)
+			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,1,0) * targetSpeed * float(deltaTime);
+		if(isDownKeyPressed && !altDirectional)
+			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,-1,0) * targetSpeed * float(deltaTime);
+		if(isUpKeyPressed && altDirectional)
+			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,0,1) * targetSpeed * float(deltaTime);
+		if(isDownKeyPressed && altDirectional)
+			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,0,-1) * targetSpeed * float(deltaTime);
+	}
 }
 
 void printouts()
@@ -429,50 +564,112 @@ void printouts()
 	//Bottom left is 0,0
 
 	ss.str(std::string()); // clear
-	ss << fps << " fps";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
-
-	//PRINT TARGET POSITION
-	ss.str(std::string()); // clear
-	ss << std::fixed << std::setprecision(PRECISION) << "target (x: " << target->worldProperties.translation.x << ", y: " 
-		<< target->worldProperties.translation.y << ", z: " << target->worldProperties.translation.z << ") - (u/i , j/k, n/m)";
+	ss << "Current Mode: " ;
+	switch(uiMode)
+	{
+		case UIMode::boneSelect:
+			ss << "boneSelect";
+			break;
+		case UIMode::lerpMode:
+			ss << "lerpMode";
+			break;
+		case UIMode::nodeMove:
+			ss << "nodeMove";
+			break;
+		case UIMode::nodeSelect:
+			ss << "nodeSelect";
+			break;
+		case UIMode::splineSpeed:
+			ss << "splineSpeed";
+			break;
+		case UIMode::targetMove:
+			ss << "targetMove";
+			break;
+		case UIMode::xAngle:
+			ss << "xAngle";
+			break;
+		case UIMode::yAngle:
+			ss << "yAngle";
+			break;
+		case UIMode::zAngle:
+			ss << "zAngle";
+			break;
+	}
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
 
-	//PRINT BONE SELECTION
+	ss.str(std::string()); // clear
+	ss << fps << " fps ";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
+
+	//PRINT TARGET POSITION
+	
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
+
+	//PRINT SPLINE INFO
+	ss.str(std::string());
+	ss << "SPLINE EDITOR ";
+	drawText(20,180, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|p| Add a node ";
+	drawText(20,160, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|o| Save Spline ";
+	drawText(20,140, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|l| Load Spline ";
+	drawText(20,120, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|i| Interpolation Mode: ";
+	if(targetPath.mode == InterpolationMode::Linear)
+		ss << "Linear";
+	else
+		ss << "Cubic";
+	drawText(20,100, ss.str().c_str());
+
+	ss.str(std::string());
+	if(targetPath.nodes.size() > 0)
+		ss << "|n| Selected Node: " << selectedTarget % targetPath.nodes.size();
+	else
+		ss << "|n| Selected Node: N/A";
+	drawText(20,80, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|-| Delete selected node ";
+	drawText(20,60, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|m| Move Selected Node";
+	drawText(20,40, ss.str().c_str());
+
+	ss.str(std::string()); // clear
+	ss << std::fixed << std::setprecision(PRECISION) << "|t| target (x: " << target->worldProperties.translation.x << ", y: " 
+		<< target->worldProperties.translation.y << ", z: " << target->worldProperties.translation.z << ")";
+	drawText(20,20, ss.str().c_str());
+
+	//PRINT BONE SELECTION (of first object)
+	ss.str(std::string()); // clear
+	ss << "SKELETAL CONTROLS";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),100, ss.str().c_str());
+	
 	Bone* bone = objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size());
 
 	ss.str(std::string()); // clear
-	ss << "Selected Bone: [" << int(bone->id) << "] " << bone->name << " (-/+)";
+	ss << "Selected Bone: [" << int(bone->id) << "] " << bone->name << " |b|";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
 	
 	ss.str(std::string()); // clear
-	ss << "x Angle: " << bone->GetEulerAngles().x << " (t/y)";
+	ss << "x Angle: " << bone->GetEulerAngles().x << " |x|";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),60, ss.str().c_str());
 	ss.str(std::string()); // clear
-	ss << "y Angle: " << bone->GetEulerAngles().y << " (g/h)";
+	ss << "y Angle: " << bone->GetEulerAngles().y << " |y|";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),40, ss.str().c_str());
 	ss.str(std::string()); // clear
-	ss << "z Angle: " << bone->GetEulerAngles().z << " (v/b)";
+	ss << "z Angle: " << bone->GetEulerAngles().z << " |z|";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
-
-	//ss.str(std::string()); // clear
-	//ss << "Selected Bone: [" << testAnimBone % objectList[0]->GetSkeleton()->GetBones().size() << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size())->name;
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
-	//ss.str(std::string()); // clear
-	//ss << "Selected Bone: [" << testAnimBone % objectList[0]->GetSkeleton()->GetBones().size() << "] " << objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size())->name;
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
-
-	//PRINT BONES
- //   for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)
-	//{
-	//	Bone* tmp = objectList[0]->GetSkeleton()->GetBones()[boneidx];
-
-	//	ss.str(std::string()); // clear
-
-	//	ss << std::fixed << std::setprecision(PRECISION) << "bone[" << boneidx << "] = (" << tmp->GetMeshSpacePosition().x << ", " << tmp->GetMeshSpacePosition().y << ", " << tmp->GetMeshSpacePosition().z << ")";
-	//	ss << " -- (" << decomposeT(tmp->finalTransform).x << ", " << decomposeT(tmp->finalTransform).y << ", " << decomposeT(tmp->finalTransform).z << ")";
-	//	drawText(20,20*(boneidx+1), ss.str().c_str());
-	//}
 
 	//PRINT CAMERA
 	ss.str(std::string()); // clear
@@ -486,6 +683,18 @@ void printouts()
 	ss.str(std::string()); // clear
 	ss << "camera.up: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.up.x << ", " << camera.viewProperties.up.y << ", " << camera.viewProperties.up.z << ")";
 	drawText(20,WINDOW_HEIGHT-60, ss.str().c_str());
+
+	//PRINT BONES
+ //   for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)
+	//{
+	//	Bone* tmp = objectList[0]->GetSkeleton()->GetBones()[boneidx];
+
+	//	ss.str(std::string()); // clear
+
+	//	ss << std::fixed << std::setprecision(PRECISION) << "bone[" << boneidx << "] = (" << tmp->GetMeshSpacePosition().x << ", " << tmp->GetMeshSpacePosition().y << ", " << tmp->GetMeshSpacePosition().z << ")";
+	//	ss << " -- (" << decomposeT(tmp->finalTransform).x << ", " << decomposeT(tmp->finalTransform).y << ", " << decomposeT(tmp->finalTransform).z << ")";
+	//	drawText(20,20*(boneidx+1), ss.str().c_str());
+	//}
 
 	//PRINT ANIMATION TIMER
 	/*if(objectList[i]->GetSkeleton()->hasKeyframes)

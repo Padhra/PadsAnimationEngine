@@ -54,6 +54,9 @@
     <ClCompile Include="Model.cpp">
       <Filter>Source Files\Model</Filter>
     </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -83,12 +86,14 @@
     <ClInclude Include="Spline.h">
       <Filter>Header Files\Spline</Filter>
     </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>Header Files\Spline</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\diffuse.ps">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="ClassDiagram.cd" />
     <None Include="Shaders\diffuse.vs">
       <Filter>Resource Files</Filter>
     </None>

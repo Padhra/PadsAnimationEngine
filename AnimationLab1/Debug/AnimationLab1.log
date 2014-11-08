@@ -1,18 +1,20 @@
-﻿Build started 11/7/2014 7:08:39 PM.
+﻿Build started 11/8/2014 3:36:49 AM.
      1>Project "C:\Users\Pad\Desktop\AnimationLab1\AnimationLab1\AnimationLab1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Users\Pad\Desktop\AnimationLab1\\AnimationLab1\assimp--3.0.1270-sdk\include" /I"C:\Users\Pad\Desktop\AnimationLab1\\AnimationLab1\glew-1.10.0\include" /IC:\Users\Pad\Desktop\AnimationLab1\\AnimationLab1\freeglut\include /I"C:\Users\Pad\Desktop\AnimationLab1\\AnimationLab1\glm-0.9.5.4\glm" /ZI /nologo /W3 /WX- /MP /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>c:\users\pad\desktop\animationlab1\animationlab1\spline.h(32): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pad\desktop\animationlab1\animationlab1\spline.h(52): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\pad\desktop\animationlab1\animationlab1\spline.h(53): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(157): warning C4305: 'argument' : truncation from 'double' to 'const float'
-     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(203): warning C4305: 'argument' : truncation from 'double' to 'const float'
-     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(229): warning C4244: '+=' : conversion from 'double' to 'int', possible loss of data
-     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(237): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(291): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(332): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(385): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pad\desktop\animationlab1\animationlab1\node.h(22): warning C4305: 'argument' : truncation from 'double' to 'const float'
+     1>c:\users\pad\desktop\animationlab1\animationlab1\spline.h(45): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\pad\desktop\animationlab1\animationlab1\spline.h(75): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\pad\desktop\animationlab1\animationlab1\spline.h(99): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(175): warning C4305: 'argument' : truncation from 'double' to 'const float'
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(221): warning C4305: 'argument' : truncation from 'double' to 'const float'
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(239): warning C4244: '+=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(247): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(303): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(344): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(440): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pad\desktop\animationlab1\animationlab1\main.cpp(451): warning C4390: ';' : empty controlled statement found; is this the intent?
          GLM: perspective function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
          GLM: angleAxis function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
          GLM: rotate function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
@@ -25,6 +27,7 @@
          Debug\Helper.obj
          Debug\main.obj
          Debug\Model.obj
+         Debug\Node.obj
          Debug\Shader.obj
          Debug\ShaderManager.obj
          Debug\Skeleton.obj
@@ -33,4 +36,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.11
+Time Elapsed 00:00:03.84

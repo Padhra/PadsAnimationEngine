@@ -24,6 +24,7 @@ class ShaderManager
 		void SetShaderProgram(GLuint shaderProgramID);
 
 		GLuint GetShaderProgramID(std::string shaderProgramName) { return shaderProgramList[shaderProgramName]; }
+		GLuint GetCurrentShaderProgramID() { return currentShaderProgramID; }
 };
 
 #endif

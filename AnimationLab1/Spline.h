@@ -3,6 +3,9 @@
 #include <glm\glm.hpp>
 #include <vector>
 #include "Helper.h"
+#include "Node.h"
+
+enum InterpolationMode { Linear = 0, Cubic };
 
 class Spline
 {
@@ -10,53 +13,95 @@ class Spline
 
 	public:
 
-		std::vector<std::pair<double, glm::vec3>> keyframes;
+		std::vector<Node*> nodes;
+
 		double timer; //in seconds
+		float speedScalar;
 
-		//short mode; // 0 = Linear, 1 = cubic
+		int currentNode;
 
-		//double totalDuration;
+		short mode; // 0 = Linear, 1 = cubic
 
-		void AddKeyframe(double t, glm::vec3 keyframe) 
+		Spline()
 		{
-			keyframes.push_back(std::make_pair(t, keyframe));
+			speedScalar = 1.0f;
+			mode = InterpolationMode::Cubic;
+
+			currentNode = 0;
 		}
+
+		void SetMode(short mode) { this->mode = mode;}
+
+		void SetSpeed(float speed) { speedScalar = speed;}
 
 		glm::vec3 GetPosition()
 		{
-			bool reset = true;
-			int prev_key = 1;
-			int next_key = 1;
-		
-			//Find the two keyframes
-			for (int keyidx = 1; keyidx < keyframes.size() - 2; keyidx++) 
+			if(timer >= 1.0)
 			{
-				prev_key = keyidx;
-				next_key = keyidx + 1;
-
-				if (keyframes[next_key].first >= timer) // if the next keyframe is greater than the timer, then we have our two keyframes
-				{
-					reset = false;
-					break;
-				}
-			}
-
-			if(reset)
-			{
-				prev_key = 1;
-				next_key = 2;
+				currentNode++;
 				timer = 0;
 			}
+			
+			float t = timer / 1.0; 
 
-		
-			float timeBetweenKeys = keyframes[next_key].first - keyframes[prev_key].first;
-			float t = (timer - keyframes[prev_key].first) / timeBetweenKeys; 
+			if(mode == InterpolationMode::Cubic)
+			{
+				return cubicLerp(nodes[(currentNode-1) % nodes.size()]->GetPosition(), 
+					nodes[currentNode % nodes.size()]->GetPosition(), nodes[(currentNode+1) % nodes.size()]->GetPosition(), 
+					nodes[(currentNode+2) % nodes.size()]->GetPosition(), t);
+			}
+			else
+			{
+				return lerp(nodes[currentNode % nodes.size()]->GetPosition(), nodes[(currentNode+1) % nodes.size()]->GetPosition(), t);
+			}
+		}
 
-			return cubicLerp(keyframes[prev_key-1].second, keyframes[prev_key].second, keyframes[next_key].second, keyframes[next_key+1].second, t);
+		void AddNode(Node* node) 
+		{
+			nodes.push_back(node);
 		}
 
 		void Update(double deltaTime)
 		{
-			timer += deltaTime/1000;
+			timer += deltaTime/1000 * speedScalar;
+		}
+
+		void Save()
+		{
+			ofstream outfile ("data.txt");
+		
+			if (outfile.is_open())
+			{
+				for(int i = 0; i < nodes.size(); i++)
+				{
+					outfile << nodes.at(i)->GetPosition().x << "\n";
+					outfile << nodes.at(i)->GetPosition().y << "\n";
+					outfile << nodes.at(i)->GetPosition().z << "\n";
+				}
+
+				outfile.close();
+			}
+		}
+
+		void Load()
+		{
+			ifstream infile;
+
+			infile.open ("data.txt", ifstream::in);
+
+			while (infile.good()) 
+			{   
+				glm::vec3 v = glm::vec3();
+				for(int i = 0; i < 3; i++)
+				{
+					string s;
+					getline(infile, s);
+					v[i] = std::stoi(s);
+				}
+
+				AddNode(new Node(v));
+			}
+          
+			infile.close();
 		}
 };

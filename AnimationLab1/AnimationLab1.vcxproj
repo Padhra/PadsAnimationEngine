@@ -85,6 +85,7 @@
     <ClCompile Include="Helper.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="Skeleton.cpp" />
@@ -95,13 +96,13 @@
     <ClInclude Include="Helper.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="Spline.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram.cd" />
     <None Include="Shaders\diffuse.ps" />
     <None Include="Shaders\diffuse.vs" />
     <None Include="Shaders\skinned.ps" />

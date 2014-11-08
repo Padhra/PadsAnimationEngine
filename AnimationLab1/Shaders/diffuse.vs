@@ -9,6 +9,8 @@ layout(location = 0) in vec3 vertex_position;
 
 uniform mat4 mvpMatrix;
 
+uniform vec4 uniformColour = vec4(1.0, 0.0, 0.0, 0.5);
+
 out vec4 colour;
 
 void main()
@@ -16,5 +18,5 @@ void main()
 	vec4 Vertex = vec4(vertex_position.x, vertex_position.y, vertex_position.z, 1.0);
 	gl_Position = mvpMatrix * Vertex;
 	
-	colour = vec4(1,0,0,0.5);
+	colour = uniformColour;
 }

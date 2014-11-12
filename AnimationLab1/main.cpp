@@ -90,6 +90,8 @@ short uiMode = 0;
 enum UIMode { boneSelect = 0, xAngle, yAngle, zAngle, nodeSelect, nodeMove, lerpMode, targetMove, splineSpeed };
 bool altDirectional = false;
 
+static bool constraints = false;
+
 int main(int argc, char** argv)
 {
 	// Set up the window
@@ -141,6 +143,7 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	shaderManager.CreateShaderProgram("skinned", "Shaders/skinned.vs", "Shaders/skinned.ps");
+	shaderManager.CreateShaderProgram("skinnedWf", "Shaders/skinned.vs", "Shaders/skinnedwireframe.ps");
 	shaderManager.CreateShaderProgram("diffuse", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
 
 	Node::objectList = &objectList;
@@ -178,8 +181,8 @@ int main(int argc, char** argv)
 	std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
 	
 	Bone* fingersL = objectList[index]->GetSkeleton()->GetBone("fingers.L");
-	fingersL->dofLimits.SetXLimits(-90, 18);
-	fingersL->dofLimits.SetYLimits(0,0);
+	//fingersL->dofLimits.SetXLimits(-90, 18);
+	//fingersL->dofLimits.SetYLimits(0,0);
 	chain.push_back(fingersL); 
 	
 	Bone* wristL = fingersL->parent;
@@ -194,8 +197,8 @@ int main(int argc, char** argv)
 	chain.push_back(forearmL); 
 
 	Bone* upperArmL = forearmL->parent;
-	upperArmL->dofLimits.SetXLimits(-60, -40);
-	upperArmL->dofLimits.SetYLimits(0, 0);
+	//upperArmL->dofLimits.SetXLimits(-60, -40);
+	//upperArmL->dofLimits.SetYLimits(0, 0);
 	upperArmL->dofLimits.SetZLimits(-80, 50);
 	chain.push_back(upperArmL); 
 	
@@ -206,7 +209,7 @@ int main(int argc, char** argv)
 	
 	//CONES
 	q = glm::angleAxis(-90.0f, glm::vec3(1,0,0));
-	objectList.push_back(new Model(glm::vec3(5,0,0), glm::toMat4(q), glm::vec3(1), MESH_FILE5, shaderManager.GetShaderProgramID("skinned")));
+	objectList.push_back(new Model(glm::vec3(5,0,0), glm::toMat4(q), glm::vec3(1), MESH_FILE5, shaderManager.GetShaderProgramID("skinnedWf")));
 	index = objectList.size()-1;
 
 	std::vector<Bone*> coneChain;
@@ -296,7 +299,6 @@ void update()
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    //glPolygonMode(GL_FRONT, GL_LINE); //Wireframe mode
 
 	glm::mat4 viewMatrix = glm::lookAt(camera.viewProperties.position, camera.viewProperties.position + camera.viewProperties.forward, camera.viewProperties.up); 
 
@@ -402,6 +404,10 @@ void keyPressed (unsigned char key, int x, int y)
 			objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
 			targetPath.DeleteNode(node);
 		}
+	}
+	if(key == 'c')
+	{
+		Skeleton::ConstraintsEnabled = !Skeleton::ConstraintsEnabled;
 	}
 
 	//SKELETAL CONTROLS
@@ -586,8 +592,16 @@ void printouts()
 	}
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
 
+	//ss.str(std::string()); // clear
+	//ss << fps << " fps ";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
+
+
 	ss.str(std::string()); // clear
-	ss << fps << " fps ";
+	if(Skeleton::ConstraintsEnabled)
+		ss << "Constraints enabled |c|";
+	else
+		ss << "Constraints disabled |c|";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
 
 	//PRINT TARGET POSITION

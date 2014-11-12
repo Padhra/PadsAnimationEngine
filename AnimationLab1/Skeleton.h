@@ -50,6 +50,8 @@ class Skeleton
 		std::map<std::string, std::vector<Bone*>> ikChains;
 		GLuint line_vao;
 
+		static bool ConstraintsEnabled;
+
 		Skeleton(Model* myModel, bool keyframes);
 		virtual ~Skeleton();
 

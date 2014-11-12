@@ -107,6 +107,8 @@
     <None Include="Shaders\diffuse.vs" />
     <None Include="Shaders\skinned.ps" />
     <None Include="Shaders\skinned.vs" />
+    <None Include="Shaders\skinnedwireframe.ps" />
+    <None Include="Shaders\skinnedwireframe.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

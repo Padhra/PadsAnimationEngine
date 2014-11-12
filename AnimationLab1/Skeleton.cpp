@@ -4,6 +4,8 @@
 #include "Model.h"
 #include <glm/gtx/euler_angles.hpp>
 
+bool Skeleton::ConstraintsEnabled = false;
+
 Skeleton::Skeleton(Model* p_myModel, bool keyframes)
 {
 	animationTimer = 0.0;
@@ -234,7 +236,8 @@ bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
 
 				bone->transform *= rotation;
 
-				ImposeDOFRestrictions(bone);
+				if(ConstraintsEnabled)
+					ImposeDOFRestrictions(bone);
 
 				UpdateGlobalTransforms(bone, bone->parent->globalTransform);
 			}

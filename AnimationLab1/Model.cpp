@@ -14,6 +14,16 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 	Load(file_name);
 
 	shaderProgramID = p_shaderProgramID;
+
+	//Get the directory for image loading
+	std::string::size_type slashIndex = std::string(file_name).find_last_of("/");
+
+    if (slashIndex == std::string::npos) 
+		directory = ".";
+    else if (slashIndex == 0) 
+        directory = "/";
+    else 
+        directory = std::string(file_name).substr(0, slashIndex);
 }
 
 Model::~Model()
@@ -39,14 +49,6 @@ bool Model::Load(const char* file_name)
 	printf("%i textures\n", scene->mNumTextures);
 	printf("%i meshes\n", scene->mNumMeshes);
 	
-	//TODO - multiple mesh support
-	//const aiMesh* mesh = scene->mMeshes[1];
-
-	
-	
-	//vertexCount = mesh->mNumVertices;
-	
-	//glGenVertexArrays (1, &vao);
 	glBindVertexArray (vao);
 	GLuint *buffers = new GLuint [NUM_VBs];
 	
@@ -74,6 +76,7 @@ bool Model::Load(const char* file_name)
 		meshEntry.BaseIndex = indexCount;
 		meshEntry.BaseVertex = vertexCount;
 		meshEntry.NumIndices = mesh->mNumFaces * 3;
+		meshEntry.MaterialIndex = mesh->mMaterialIndex; //This will be used during rendering to bind the proper texture.
 		MeshEntries.push_back(meshEntry);
 
 		vertexCount += mesh->mNumVertices;
@@ -104,6 +107,17 @@ bool Model::Load(const char* file_name)
 
 		if(mesh->HasBones())
 			modelHasBones = true;
+
+		if(mesh->mMaterialIndex >=0)
+		{
+			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+			vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+			vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+		}
 	}
 
 	//2. BUFFER THE DATA
@@ -144,12 +158,10 @@ bool Model::Load(const char* file_name)
 
 	if (modelHasBones)
 	{
-		aiMesh* mesh = scene->mMeshes[0];
+		//aiMesh* mesh = scene->mMeshes[0];
 
-		skeleton = new Skeleton(this, mesh, scene->HasAnimations());
+		skeleton = new Skeleton(this, scene->HasAnimations());
 		hasSkeleton = true;
-
-		//skeleton->globalInverse = convert_assimp_matrix(scene->mRootNode->mTransformation.Inverse());
 
 		printf ("\nBoneHierarchy\n");
 		
@@ -316,4 +328,112 @@ bool Model::Load(const char* file_name)
 	delete[] buffers;
 	
 	return true;
+}
+
+void Model::Render()
+{
+	glBindVertexArray(vao);
+		
+	if(MeshEntries.size() > 1)
+	{
+		for(int meshEntryIdx = 0; meshEntryIdx < MeshEntries.size(); meshEntryIdx++)
+		{
+			/*const GLuint MaterialIndex = MeshEntries[meshEntryIdx].MaterialIndex;
+
+			assert(MaterialIndex < textures.size());
+        
+			if (textures[MaterialIndex]) {
+				textures[MaterialIndex]->Bind(GL_TEXTURE0);
+			}*/
+
+			glDrawElementsBaseVertex(GL_TRIANGLES, 
+                                MeshEntries[meshEntryIdx].NumIndices, 
+                                GL_UNSIGNED_INT, 
+                                (void*)(sizeof(unsigned int) * MeshEntries[meshEntryIdx].BaseIndex), 
+                                MeshEntries[meshEntryIdx].BaseVertex);
+		}
+	}
+	else if(indices.size() > 0)
+	{
+		glDrawElements( GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
+	}
+	else
+	{
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);	
+	}
+
+	// Make sure the VAO is not changed from the outside    
+    //glBindVertexArray(0); //?
+}
+
+//This function loads all the textures that are used by the model.
+// Checks all material textures of a given type and loads the textures if they're not loaded yet.
+// The required info is returned as a Texture struct.
+vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
+{
+	vector<Texture> textures;
+
+	for(GLuint i = 0; i < mat->GetTextureCount(type); i++)
+	{
+		aiString str;
+		mat->GetTexture(type, i, &str);
+		// Check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+		GLboolean skip = false;
+		for(GLuint j = 0; j < texturesLoaded.size(); j++)
+		{
+			if(texturesLoaded[j].path == str)
+			{
+				textures.push_back(texturesLoaded[j]);
+				skip = true; // A texture with the same filepath has already been loaded, continue to next one. (optimization)
+				break;
+			}
+		}
+
+		if(!skip)
+		{   // If texture hasn't been loaded already, load it
+			Texture texture;
+			texture.id = LoadTexture(str.C_Str(), this->directory);
+			texture.type = typeName;
+			texture.path = str;
+			textures.push_back(texture);
+			this->texturesLoaded.push_back(texture);  // Store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
+		}
+	}
+
+	return textures;
+}
+
+GLuint Model::LoadTexture(const char* fileName, string directory) 
+{		
+	Magick::Blob blob;
+	Magick::Image* image; 
+
+	string stringFileName(fileName);
+	string fullPath = directory + "\\" + stringFileName;
+
+	try {
+		image = new Magick::Image(fullPath.c_str());
+		image->write(&blob, "RGBA");
+	}
+	catch (Magick::Error& Error) {
+		std::cout << "Error loading texture '" << fullPath << "': " << Error.what() << std::endl;
+		return false;
+	}
+
+	GLuint textureID;
+
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+			
+	glTexImage2D(GL_TEXTURE_2D, 0/*LOD*/, GL_RGBA, image->columns(), image->rows(), 0/*BORDER*/, GL_RGBA, GL_UNSIGNED_BYTE, blob.data());
+
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   
+	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+			
+	glBindTexture(GL_TEXTURE_2D, 0); //unbind
+    
+	return textureID;
 }

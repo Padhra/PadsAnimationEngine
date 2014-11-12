@@ -50,7 +50,7 @@ class Skeleton
 		std::map<std::string, std::vector<Bone*>> ikChains;
 		GLuint line_vao;
 
-		Skeleton(Model* myModel, const aiMesh* mesh, bool keyframes);
+		Skeleton(Model* myModel, bool keyframes);
 		virtual ~Skeleton();
 
 		bool ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, Bone* parent);

@@ -178,25 +178,25 @@ int main(int argc, char** argv)
 	std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
 	
 	Bone* fingersL = objectList[index]->GetSkeleton()->GetBone("fingers.L");
-	//fingersL->dofLimits.SetXLimits(-90, 18);
-	//fingersL->dofLimits.SetYLimits(0,0);
+	fingersL->dofLimits.SetXLimits(-90, 18);
+	fingersL->dofLimits.SetYLimits(0,0);
 	chain.push_back(fingersL); 
 	
 	Bone* wristL = fingersL->parent;
-	//wristL->dofLimits.SetXLimits(-51, 68);
-	//wristL->dofLimits.SetYLimits(0, 0);
-	//wristL->dofLimits.SetZLimits(-20, 20);
+	wristL->dofLimits.SetXLimits(-51, 68);
+	wristL->dofLimits.SetYLimits(0, 0);
+	wristL->dofLimits.SetZLimits(-20, 20);
 	chain.push_back(wristL); 
 
 	Bone* forearmL = wristL->parent;
-	//forearmL->dofLimits.SetXLimits(0, 0);
-	//forearmL->dofLimits.SetZLimits(0, 114);
+	forearmL->dofLimits.SetXLimits(0, 0);
+	forearmL->dofLimits.SetZLimits(0, 114);
 	chain.push_back(forearmL); 
 
 	Bone* upperArmL = forearmL->parent;
-	//upperArmL->dofLimits.SetXLimits(-60, -40);
-	//upperArmL->dofLimits.SetYLimits(0, 0);
-	//upperArmL->dofLimits.SetZLimits(-80, 50);
+	upperArmL->dofLimits.SetXLimits(-60, -40);
+	upperArmL->dofLimits.SetYLimits(0, 0);
+	upperArmL->dofLimits.SetZLimits(-80, 50);
 	chain.push_back(upperArmL); 
 	
 	/*for(int i = 0; i < 3; i++)
@@ -302,13 +302,15 @@ void draw()
 
 	for(int i = 0; i < objectList.size(); i++)
 	{
+		//Set shader
 		shaderManager.SetShaderProgram(objectList[i]->GetShaderProgramID());
 
+		//Set MVP matrix
 		glm::mat4 MVP = projectionMatrix * viewMatrix * objectList.at(i)->GetModelMatrix();
-
 		int mvpMatrixLocation = glGetUniformLocation(objectList[i]->GetShaderProgramID(), "mvpMatrix"); // Get the location of our mvp matrix in the shader
 		glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP/*&MVP[0][0]*/)); // Send our model/view/projection matrix to the shader
 		
+		//Set Bone matrices
 		if(objectList[i]->HasSkeleton())
 		{
 			int numBones = objectList[i]->GetSkeleton()->GetBones().size();
@@ -337,28 +339,11 @@ void draw()
 			}
 		}
 
-		glBindVertexArray(objectList.at(i)->GetVAO());
-		
-		if(objectList[i]->MeshEntries.size() > 1)
-		{
-			for(int meshEntryIdx = 0; meshEntryIdx < objectList[i]->MeshEntries.size(); meshEntryIdx++)
-			{
-				glDrawElementsBaseVertex(GL_TRIANGLES, 
-                                 objectList[i]->MeshEntries[meshEntryIdx].NumIndices, 
-                                 GL_UNSIGNED_INT, 
-                                 (void*)(sizeof(unsigned int) * objectList[i]->MeshEntries[meshEntryIdx].BaseIndex), 
-                                 objectList[i]->MeshEntries[meshEntryIdx].BaseVertex);
-			}
-		}
-		else if(objectList[i]->GetIndices().size() > 0)
-		{
-			glDrawElements( GL_TRIANGLES, objectList[i]->GetIndices().size(), GL_UNSIGNED_INT, (void*)0);
-		}
-		else
-		{
-			glDrawArrays(GL_TRIANGLES, 0, objectList.at(i)->GetVertexCount());	
-		}
+		//Render
+		objectList.at(i)->Render();
 	}	
+
+	printouts(); //All the DrawText stuff
 
 	if(targetPath.nodes.size() > 0)
 	{
@@ -377,8 +362,6 @@ void draw()
 
 		glUniform4fv(uniformColourLocation, 1, red);
 	}
-
-	printouts();
 
 	glutSwapBuffers();
 }
@@ -454,9 +437,6 @@ void passiveMouseMotion(int x, int y)
 
 void handleSpecialKeypress(int key, int x, int y)
 {
-
-	if(glutGetModifiers() == GLUT_ACTIVE_CTRL);
-
 	switch (key) 
 	{
 		case GLUT_KEY_LEFT:

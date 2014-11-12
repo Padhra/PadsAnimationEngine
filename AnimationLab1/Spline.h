@@ -81,7 +81,10 @@ class Spline
 				{
 					outfile << nodes.at(i)->GetPosition().x << "\n";
 					outfile << nodes.at(i)->GetPosition().y << "\n";
-					outfile << nodes.at(i)->GetPosition().z << "\n";
+					outfile << nodes.at(i)->GetPosition().z;
+
+					if(i != nodes.size()-1)
+						outfile << "\n";
 				}
 
 				outfile.close();

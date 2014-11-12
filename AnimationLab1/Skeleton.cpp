@@ -4,13 +4,13 @@
 #include "Model.h"
 #include <glm/gtx/euler_angles.hpp>
 
-Skeleton::Skeleton(Model* p_myModel, const aiMesh* p_mesh, bool keyframes)
+Skeleton::Skeleton(Model* p_myModel, bool keyframes)
 {
 	animationTimer = 0.0;
 
 	hasKeyframes = keyframes;
 
-	model = p_myModel;
+	model = p_myModel; // for the model matrix
 }
 
 Skeleton::~Skeleton()

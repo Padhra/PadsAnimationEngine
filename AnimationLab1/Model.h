@@ -24,6 +24,8 @@
 #include "helper.h"
 #include "Skeleton.h"
 
+#include "Magick++.h"
+
 using namespace std;
 
 enum VB_TYPES //TODO - support models with different combinations of below
@@ -58,11 +60,20 @@ struct MeshEntry {
         NumIndices    = 0;
         BaseVertex    = 0;
         BaseIndex     = 0;
+		MaterialIndex = 0xFFFFFFFF;
     }
         
     unsigned int NumIndices;
     unsigned int BaseVertex;
     unsigned int BaseIndex;
+	unsigned int MaterialIndex; //MeshEntry::MaterialIndex points into one of the textures in m_Textures
+};
+
+struct Texture {
+
+	GLuint id;
+	std::string type;
+	aiString path;
 };
 
 class Model
@@ -71,6 +82,10 @@ class Model
 
 		GLuint vao;
 		vector<int> indices;
+
+		std::string directory;
+		vector<Texture> textures;
+		vector<Texture> texturesLoaded;
 
 		GLuint shaderProgramID;
 
@@ -88,6 +103,11 @@ class Model
 		vector<MeshEntry> MeshEntries;
 
 		bool Load(const char* file_name);
+		
+		void Render();
+
+		GLuint LoadTexture(const char* fileName, string directory);
+		vector<Texture> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
 
 		//Getters
 		GLuint GetVAO() { return vao; }
@@ -103,8 +123,6 @@ class Model
 				* worldProperties.orientation
 				* glm::scale(glm::mat4(1.0f), worldProperties.scale);
 		}		
-
-		//glm::vec3 GetWorldPosition() { return worldProperties.translation; }
 
 		//Setters
 		void SetShaderProgramID(GLuint p_shaderProgramID) { shaderProgramID = p_shaderProgramID; }

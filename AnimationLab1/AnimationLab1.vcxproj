@@ -52,14 +52,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\AnimationLab1\assimp--3.0.1270-sdk\include;$(SolutionDir)\AnimationLab1\glew-1.10.0\include;$(SolutionDir)\AnimationLab1\freeglut\include;$(SolutionDir)\AnimationLab1\glm-0.9.5.4\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\AnimationLab1\ImageMagick-6\Include;$(SolutionDir)\AnimationLab1\assimp--3.0.1270-sdk\include;$(SolutionDir)\AnimationLab1\glew-1.10.0\include;$(SolutionDir)\AnimationLab1\freeglut\include;$(SolutionDir)\AnimationLab1\glm-0.9.5.4\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\AnimationLab1\assimp--3.0.1270-sdk\lib\assimp_debug-dll_win32;$(SolutionDir)\AnimationLab1\freeglut\lib;$(SolutionDir)\AnimationLab1\glew-1.10.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>freeglut.lib;glew32.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Patrick\Desktop\AnimationLab1\AnimationLab1\ImageMagick-6\Lib;$(SolutionDir)\AnimationLab1\assimp--3.0.1270-sdk\lib\assimp_debug-dll_win32;$(SolutionDir)\AnimationLab1\freeglut\lib;$(SolutionDir)\AnimationLab1\glew-1.10.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut.lib;glew32.lib;assimp.lib;CORE_DB_Magick++_.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

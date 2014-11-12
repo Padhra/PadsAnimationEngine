@@ -14,16 +14,6 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 	Load(file_name);
 
 	shaderProgramID = p_shaderProgramID;
-
-	//Get the directory for image loading
-	std::string::size_type slashIndex = std::string(file_name).find_last_of("/");
-
-    if (slashIndex == std::string::npos) 
-		directory = ".";
-    else if (slashIndex == 0) 
-        directory = "/";
-    else 
-        directory = std::string(file_name).substr(0, slashIndex);
 }
 
 Model::~Model()
@@ -33,7 +23,7 @@ Model::~Model()
 
 bool Model::Load(const char* file_name)
 {
-	const aiScene* scene = aiImportFile (file_name, aiProcess_Triangulate);
+	const aiScene* scene = aiImportFile (file_name, aiProcess_Triangulate | aiProcess_FlipUVs);
 	
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
 	{
@@ -115,8 +105,8 @@ bool Model::Load(const char* file_name)
 			vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-			vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-			textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+			//vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+			//textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 		}
 	}
 
@@ -188,7 +178,6 @@ bool Model::Load(const char* file_name)
 				boneIDs[v][w] = 0.0f;
 			}
 		}
-
 
 		/*for (int boneIdx = 0; boneIdx < skeleton->GetBones().size(); boneIdx++) 
 		{
@@ -330,7 +319,7 @@ bool Model::Load(const char* file_name)
 	return true;
 }
 
-void Model::Render()
+void Model::Render(GLuint shader)
 {
 	glBindVertexArray(vao);
 		
@@ -338,13 +327,18 @@ void Model::Render()
 	{
 		for(int meshEntryIdx = 0; meshEntryIdx < MeshEntries.size(); meshEntryIdx++)
 		{
-			/*const GLuint MaterialIndex = MeshEntries[meshEntryIdx].MaterialIndex;
+			const GLuint materialIndex = MeshEntries[meshEntryIdx].MaterialIndex;
 
-			assert(MaterialIndex < textures.size());
-        
-			if (textures[MaterialIndex]) {
-				textures[MaterialIndex]->Bind(GL_TEXTURE0);
-			}*/
+			assert(materialIndex < textures.size());
+
+			glActiveTexture(GL_TEXTURE0);
+
+			// Now set the sampler to the correct texture unit
+			int samplerLocation = glGetUniformLocation(shader, "texture_diffuse");
+			glUniform1i(samplerLocation, 0);
+
+			// And finally bind the texture
+			glBindTexture(GL_TEXTURE_2D, textures[materialIndex].id);
 
 			glDrawElementsBaseVertex(GL_TRIANGLES, 
                                 MeshEntries[meshEntryIdx].NumIndices, 
@@ -366,9 +360,7 @@ void Model::Render()
     //glBindVertexArray(0); //?
 }
 
-//This function loads all the textures that are used by the model.
-// Checks all material textures of a given type and loads the textures if they're not loaded yet.
-// The required info is returned as a Texture struct.
+//This function loads all the textures used by the model of a given type
 vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
 {
 	vector<Texture> textures;
@@ -377,39 +369,24 @@ vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type,
 	{
 		aiString str;
 		mat->GetTexture(type, i, &str);
-		// Check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-		GLboolean skip = false;
-		for(GLuint j = 0; j < texturesLoaded.size(); j++)
-		{
-			if(texturesLoaded[j].path == str)
-			{
-				textures.push_back(texturesLoaded[j]);
-				skip = true; // A texture with the same filepath has already been loaded, continue to next one. (optimization)
-				break;
-			}
-		}
 
-		if(!skip)
-		{   // If texture hasn't been loaded already, load it
-			Texture texture;
-			texture.id = LoadTexture(str.C_Str(), this->directory);
-			texture.type = typeName;
-			texture.path = str;
-			textures.push_back(texture);
-			this->texturesLoaded.push_back(texture);  // Store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
-		}
+		Texture texture;
+		texture.id = LoadTexture(str.C_Str());
+		texture.type = typeName;
+		texture.path = str;
+		textures.push_back(texture); //TODO: sans optimisation, for now (see texturesLoaded)
 	}
 
 	return textures;
 }
 
-GLuint Model::LoadTexture(const char* fileName, string directory) 
+GLuint Model::LoadTexture(const char* fileName) 
 {		
 	Magick::Blob blob;
 	Magick::Image* image; 
 
 	string stringFileName(fileName);
-	string fullPath = directory + "\\" + stringFileName;
+	string fullPath = "Textures/" + stringFileName;
 
 	try {
 		image = new Magick::Image(fullPath.c_str());
@@ -425,8 +402,10 @@ GLuint Model::LoadTexture(const char* fileName, string directory)
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 			
+	//Load the image data in to the texture
 	glTexImage2D(GL_TEXTURE_2D, 0/*LOD*/, GL_RGBA, image->columns(), image->rows(), 0/*BORDER*/, GL_RGBA, GL_UNSIGNED_BYTE, blob.data());
 
+	//Parameter stuff, for magnifying texture etc.
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

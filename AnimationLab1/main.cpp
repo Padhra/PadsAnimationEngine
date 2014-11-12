@@ -296,7 +296,7 @@ void update()
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glPolygonMode(GL_FRONT, GL_LINE); //Wireframe mode
+    //glPolygonMode(GL_FRONT, GL_LINE); //Wireframe mode
 
 	glm::mat4 viewMatrix = glm::lookAt(camera.viewProperties.position, camera.viewProperties.position + camera.viewProperties.forward, camera.viewProperties.up); 
 
@@ -340,7 +340,7 @@ void draw()
 		}
 
 		//Render
-		objectList.at(i)->Render();
+		objectList.at(i)->Render(shaderManager.GetCurrentShaderProgramID());
 	}	
 
 	printouts(); //All the DrawText stuff

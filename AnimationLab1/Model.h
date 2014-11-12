@@ -83,9 +83,8 @@ class Model
 		GLuint vao;
 		vector<int> indices;
 
-		std::string directory;
 		vector<Texture> textures;
-		vector<Texture> texturesLoaded;
+		vector<Texture> texturesLoaded; //To prevent reloading textures used across multiple meshes
 
 		GLuint shaderProgramID;
 
@@ -104,9 +103,9 @@ class Model
 
 		bool Load(const char* file_name);
 		
-		void Render();
+		void Render(GLuint shader);
 
-		GLuint LoadTexture(const char* fileName, string directory);
+		GLuint LoadTexture(const char* fileName);
 		vector<Texture> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
 
 		//Getters

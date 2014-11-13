@@ -349,15 +349,15 @@ void Model::Render(GLuint shader)
 	}
 	else if(indices.size() > 0)
 	{
-		glPolygonMode(GL_FRONT, GL_LINE); //TODO - delete
+		glPolygonMode(GL_FRONT, GL_LINE); 
 		glDrawElements( GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
-		glPolygonMode(GL_FRONT, GL_FILL); //TODO - delete
+		glPolygonMode(GL_FRONT, GL_FILL); 
 	}
 	else
 	{
-		glPolygonMode(GL_FRONT, GL_LINE); //TODO - delete
+		glPolygonMode(GL_FRONT, GL_LINE); 
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);	
-		glPolygonMode(GL_FRONT, GL_FILL); //TODO - delete
+		glPolygonMode(GL_FRONT, GL_FILL); 
 	}
 
 	// Make sure the VAO is not changed from the outside    

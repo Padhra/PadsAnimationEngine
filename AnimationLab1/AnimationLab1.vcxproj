@@ -58,7 +58,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Patrick\Desktop\AnimationLab1\AnimationLab1\ImageMagick-6\Lib;$(SolutionDir)\AnimationLab1\assimp--3.0.1270-sdk\lib\assimp_debug-dll_win32;$(SolutionDir)\AnimationLab1\freeglut\lib;$(SolutionDir)\AnimationLab1\glew-1.10.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\AnimationLab1\ImageMagick-6\Lib;$(SolutionDir)\AnimationLab1\assimp--3.0.1270-sdk\lib\assimp_debug-dll_win32;$(SolutionDir)\AnimationLab1\freeglut\lib;$(SolutionDir)\AnimationLab1\glew-1.10.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>freeglut.lib;glew32.lib;assimp.lib;CORE_DB_Magick++_.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -89,6 +89,7 @@
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="Spline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bone.h" />
@@ -108,7 +109,6 @@
     <None Include="Shaders\skinned.ps" />
     <None Include="Shaders\skinned.vs" />
     <None Include="Shaders\skinnedwireframe.ps" />
-    <None Include="Shaders\skinnedwireframe.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

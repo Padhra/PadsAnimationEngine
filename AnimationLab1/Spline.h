@@ -16,7 +16,7 @@ class Spline
 		std::vector<Node*> nodes;
 
 		double timer; //in seconds
-		float speedScalar;
+		static float speedScalar;
 
 		int currentNode;
 
@@ -24,7 +24,6 @@ class Spline
 
 		Spline()
 		{
-			speedScalar = 1.0f;
 			mode = InterpolationMode::Cubic;
 
 			currentNode = 0;

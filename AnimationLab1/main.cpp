@@ -91,6 +91,7 @@ enum UIMode { boneSelect = 0, xAngle, yAngle, zAngle, nodeSelect, nodeMove, lerp
 bool altDirectional = false;
 
 static bool constraints = false;
+bool firstRun = true;
 
 int main(int argc, char** argv)
 {
@@ -136,7 +137,7 @@ int main(int argc, char** argv)
 	//camera.viewProperties.forward = glm::vec3(0.f, 0.f, -10.f); //horizontal and vertical control this
 	camera.viewProperties.up = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	glClearColor(.5,.5,.5,1);
+	glClearColor(1,1,1,1);
 	glEnable (GL_CULL_FACE); // cull face 
 	glCullFace (GL_BACK); // cull back face 
 	glFrontFace (GL_CCW); // GL_CCW for counter clock-wise
@@ -181,8 +182,6 @@ int main(int argc, char** argv)
 	std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
 	
 	Bone* fingersL = objectList[index]->GetSkeleton()->GetBone("fingers.L");
-	//fingersL->dofLimits.SetXLimits(-90, 18);
-	//fingersL->dofLimits.SetYLimits(0,0);
 	chain.push_back(fingersL); 
 	
 	Bone* wristL = fingersL->parent;
@@ -198,14 +197,27 @@ int main(int argc, char** argv)
 
 	Bone* upperArmL = forearmL->parent;
 	//upperArmL->dofLimits.SetXLimits(-60, -40);
-	//upperArmL->dofLimits.SetYLimits(0, 0);
+	upperArmL->dofLimits.SetYLimits(0, 0);
 	upperArmL->dofLimits.SetZLimits(-80, 50);
 	chain.push_back(upperArmL); 
 	
+	/*Bone* head = objectList[index]->GetSkeleton()->GetBone("head");
+	chain.push_back(head);
+
+	Bone* neck = head->parent;
+	neck->dofLimits.SetXLimits(-20, 20);
+	neck->dofLimits.SetYLimits(-35, 35);
+	neck->dofLimits.SetZLimits(-6, 50);
+	chain.push_back(neck);*/
+
 	/*for(int i = 0; i < 3; i++)
 		chain.push_back(chain[chain.size()-1]->parent);*/
 	std::reverse(chain.begin(),chain.end());
 	objectList.at(index)->GetSkeleton()->DefineIKChain("chain1", chain);
+
+	Bone* upperArmR = objectList[index]->GetSkeleton()->GetBone("upperarm.R");
+	upperArmR->transform = glm::rotate(upperArmR->transform, 70.0f, glm::vec3(1,0,0));
+
 	
 	//CONES
 	q = glm::angleAxis(-90.0f, glm::vec3(1,0,0));
@@ -406,9 +418,9 @@ void keyPressed (unsigned char key, int x, int y)
 		}
 	}
 	if(key == 'c')
-	{
 		Skeleton::ConstraintsEnabled = !Skeleton::ConstraintsEnabled;
-	}
+	if(key == 'u')
+		uiMode = UIMode::splineSpeed;
 
 	//SKELETAL CONTROLS
 	if(key == 'b')
@@ -451,6 +463,13 @@ void handleSpecialKeypress(int key, int x, int y)
 				testAnimBone--;
 			else if(uiMode == UIMode::nodeSelect)
 				selectedTarget--;
+			else if(uiMode == UIMode::splineSpeed)
+			{
+				Spline::speedScalar -= 0.01f;
+
+				if(Spline::speedScalar < 0)
+					Spline::speedScalar = 0;
+			}
 			
 			isLeftKeyPressed = true;
 
@@ -462,6 +481,8 @@ void handleSpecialKeypress(int key, int x, int y)
 				testAnimBone++;
 			else if(uiMode == UIMode::nodeSelect)
 				selectedTarget++;
+			else if(uiMode == UIMode::splineSpeed)
+				Spline::speedScalar += 0.01f;
 
 			isRightKeyPressed = true;
 			
@@ -611,6 +632,10 @@ void printouts()
 	//PRINT SPLINE INFO
 	ss.str(std::string());
 	ss << "SPLINE EDITOR ";
+	drawText(20,200, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|u| Speed scalar: " << Spline::speedScalar;
 	drawText(20,180, ss.str().c_str());
 
 	ss.str(std::string());

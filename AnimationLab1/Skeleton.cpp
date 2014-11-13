@@ -4,7 +4,7 @@
 #include "Model.h"
 #include <glm/gtx/euler_angles.hpp>
 
-bool Skeleton::ConstraintsEnabled = false;
+bool Skeleton::ConstraintsEnabled = true;
 
 Skeleton::Skeleton(Model* p_myModel, bool keyframes)
 {
@@ -81,7 +81,7 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					bone->transform = convert_assimp_matrix(aiBone->mTransformation);
 
 					root = bone->parent; //The last guy to get in here is the root, as it is depth first
-
+					
 					break;
 				}
 			}

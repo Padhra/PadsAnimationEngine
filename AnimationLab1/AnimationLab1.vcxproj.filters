@@ -28,6 +28,9 @@
     <Filter Include="Header Files\Spline">
       <UniqueIdentifier>{48e2eed7-b05a-4bae-ad87-1332c177339f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Spline">
+      <UniqueIdentifier>{a667f8db-1261-4f44-8a52-964d1ee88194}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -55,7 +58,10 @@
       <Filter>Source Files\Model</Filter>
     </ClCompile>
     <ClCompile Include="Node.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Spline</Filter>
+    </ClCompile>
+    <ClCompile Include="Spline.cpp">
+      <Filter>Source Files\Spline</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -104,9 +110,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Shaders\skinnedwireframe.ps">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Shaders\skinnedwireframe.vs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

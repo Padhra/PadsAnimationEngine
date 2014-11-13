@@ -36,6 +36,7 @@ void drawText(int x, int y, const char *st)
 	int l,i;
 
 	l=strlen(st); // see how many characters are in text string.
+
 	glWindowPos2i(x, y); // location to start printing text
 	
 	for(i=0; i < l; i++) // loop until i is greater then l
@@ -148,11 +149,4 @@ glm::vec3 decomposeT(glm::mat4 m)
     translation.z = m[3][2];
 
 	return translation;
-}
-
-double vectorSquaredDistance(glm::vec3 v1, glm::vec3 v2) 
-{
-	return(	((v1.x - v2.x) * (v1.x - v2.x)) + 
-			((v1.y - v2.y) * (v1.y - v2.y)) + 	
-			((v1.z - v2.z) * (v1.z - v2.z)) ); 	
 }

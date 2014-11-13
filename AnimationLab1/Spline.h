@@ -70,9 +70,11 @@ class Spline
 			timer += deltaTime/1000 * speedScalar;
 		}
 
-		void Save()
+		void Save(int selectedFile)
 		{
-			ofstream outfile ("data.txt");
+			std::stringstream ss;
+			ss << "Splines/spline" << selectedFile << ".txt";
+			ofstream outfile (ss.str());
 		
 			if (outfile.is_open())
 			{
@@ -90,11 +92,17 @@ class Spline
 			}
 		}
 
-		void Load()
+		void Load(int selectedFile)
 		{
+			//nodes.erase(nodes.begin(), nodes.begin() + nodes.size());
+			//nodes.clear();
+			//nodes.erase( nodes.begin(), nodes.end() );
+
 			ifstream infile;
 
-			infile.open ("data.txt", ifstream::in);
+			std::stringstream ss;
+			ss << "Splines/spline" << selectedFile << ".txt";
+			infile.open (ss.str(), ifstream::in);
 
 			while (infile.good()) 
 			{   

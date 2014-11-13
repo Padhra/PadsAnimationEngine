@@ -87,11 +87,13 @@ GLuint line_vao;
 std::vector<glm::vec3> lines;
 
 short uiMode = 0;
-enum UIMode { boneSelect = 0, xAngle, yAngle, zAngle, nodeSelect, nodeMove, lerpMode, targetMove, splineSpeed };
+enum UIMode { boneSelect = 0, xAngle, yAngle, zAngle, nodeSelect, nodeMove, lerpMode, targetMove, splineSpeed, fileSelect };
 bool altDirectional = false;
 
 static bool constraints = false;
 bool firstRun = true;
+
+int selectedFile = 1;
 
 int main(int argc, char** argv)
 {
@@ -389,9 +391,19 @@ void keyPressed (unsigned char key, int x, int y)
 
 	//SPLINE EDITOR
 	if(key == 'o')
-		targetPath.Save();
+		targetPath.Save(selectedFile);
 	if(key == 'l')
-		targetPath.Load();
+	{
+		int size = targetPath.nodes.size();
+		for(int i = 0; i < size; i++)
+		{
+			Node* node = *(targetPath.nodes.begin());
+			objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
+			targetPath.DeleteNode(node);
+		}
+
+		targetPath.Load(selectedFile);
+	}
 	if(key == 'p')
 		targetPath.AddNode(new Node(glm::vec3(0,0,0)));
 	if(key == 't')
@@ -421,6 +433,8 @@ void keyPressed (unsigned char key, int x, int y)
 		Skeleton::ConstraintsEnabled = !Skeleton::ConstraintsEnabled;
 	if(key == 'u')
 		uiMode = UIMode::splineSpeed;
+	if(key == 'h')
+		uiMode = UIMode::fileSelect;
 
 	//SKELETAL CONTROLS
 	if(key == 'b')
@@ -465,10 +479,17 @@ void handleSpecialKeypress(int key, int x, int y)
 				selectedTarget--;
 			else if(uiMode == UIMode::splineSpeed)
 			{
-				Spline::speedScalar -= 0.01f;
+				Spline::speedScalar -= 0.1f;
 
 				if(Spline::speedScalar < 0)
 					Spline::speedScalar = 0;
+			}
+			else if(uiMode == UIMode::fileSelect)
+			{
+				selectedFile--;
+
+				if(selectedFile < 1)
+					selectedFile = 1;
 			}
 			
 			isLeftKeyPressed = true;
@@ -482,7 +503,9 @@ void handleSpecialKeypress(int key, int x, int y)
 			else if(uiMode == UIMode::nodeSelect)
 				selectedTarget++;
 			else if(uiMode == UIMode::splineSpeed)
-				Spline::speedScalar += 0.01f;
+				Spline::speedScalar += 0.1f;
+			else if(uiMode == UIMode::fileSelect)
+				selectedFile++;
 
 			isRightKeyPressed = true;
 			
@@ -632,6 +655,10 @@ void printouts()
 	//PRINT SPLINE INFO
 	ss.str(std::string());
 	ss << "SPLINE EDITOR ";
+	drawText(20,220, ss.str().c_str());
+
+	ss.str(std::string());
+	ss << "|h| File Select: " << selectedFile;
 	drawText(20,200, ss.str().c_str());
 
 	ss.str(std::string());

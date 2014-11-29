@@ -63,14 +63,14 @@ void main()
 	colour = vec4 (0.0, 0.0, 0.0, 0.5);
 	
 	//For visual debugging purposes 
-    int mostInfluentialBone = 3;
-	for(int i = 2; i >= 0; i--)
-	{
-		if (Weights[mostInfluentialBone] < Weights[int(bone_id[i])])
-			mostInfluentialBone = i;
-	}
+    //int mostInfluentialBone = 3;
+	//for(int i = 2; i >= 0; i--)
+	//{
+		//if (Weights[mostInfluentialBone] < Weights[int(bone_id[i])])
+			//mostInfluentialBone = i;
+	//}
 
-	colour = colours[int(bone_id[mostInfluentialBone])];
+	//colour = colours[int(bone_id[mostInfluentialBone])];
 	
 	texCoord = texture_coord;
 	normal = vertex_normal;

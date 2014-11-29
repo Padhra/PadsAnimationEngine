@@ -2,16 +2,16 @@
 
 //This is the layout convention accross all shader files
 layout(location = 0) in vec3 vertex_position;
-//layout(location = 1) in vec3 vertex_normal;
-//layout(location = 2) in vec2 texture_coord;
-//layout(location = 3) in vec4 bone_ids;
-//layout(location = 4) in vec4 bone_weights;
+layout(location = 1) in vec3 vertex_normal;
+layout(location = 2) in vec2 texture_coord;
 
 uniform mat4 mvpMatrix;
 
 uniform vec4 uniformColour = vec4(1.0, 0.0, 0.0, 0.5);
 
 out vec4 colour;
+out vec3 normal;
+out vec2 texCoord;
 
 void main()
 {
@@ -19,4 +19,7 @@ void main()
 	gl_Position = mvpMatrix * Vertex;
 	
 	colour = uniformColour;
+
+	texCoord = texture_coord;
+	normal = vertex_normal;
 }

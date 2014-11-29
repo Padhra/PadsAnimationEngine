@@ -45,7 +45,7 @@ void drawText(int x, int y, const char *st)
 	}
 }
 
-glm::mat4 convert_assimp_matrix(aiMatrix4x4 from)
+glm::mat4 convertAssimpMatrix(aiMatrix4x4 from)
 {
 	 glm::mat4 to;
 

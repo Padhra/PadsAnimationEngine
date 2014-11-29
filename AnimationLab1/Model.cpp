@@ -66,8 +66,8 @@ bool Model::Load(const char* file_name)
 		meshEntry.BaseIndex = indexCount;
 		meshEntry.BaseVertex = vertexCount;
 		meshEntry.NumIndices = mesh->mNumFaces * 3;
-		meshEntry.MaterialIndex = mesh->mMaterialIndex; //This will be used during rendering to bind the proper texture.
-		MeshEntries.push_back(meshEntry);
+		//meshEntry.MaterialIndex = mesh->mMaterialIndex; //This will be used during rendering to bind the proper texture.
+		
 
 		vertexCount += mesh->mNumVertices;
 		indexCount += meshEntry.NumIndices;
@@ -102,12 +102,35 @@ bool Model::Load(const char* file_name)
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-			vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-			textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+			stringstream ss;
+			ss << "\nLoading " << material->GetTextureCount(aiTextureType_DIFFUSE) << " aiTextureType_DIFFUSE";
+			ss << "\nLoading " << material->GetTextureCount(aiTextureType_SPECULAR) << " aiTextureType_SPECULAR";
+			ss << "\nLoading " << material->GetTextureCount(aiTextureType_NORMALS) << " aiTextureType_NORMALS";
+			ss << "\nLoading " << material->GetTextureCount(aiTextureType_OPACITY) << " aiTextureType_OPACITY";
+			ss << "\nLoading " << material->GetTextureCount(aiTextureType_DISPLACEMENT) << " aiTextureType_DISPLACEMENT";
+			std::cout << ss.str();
+
+			///*vector<Texture> diffuseMaps = */LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+			//textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+			for(int i = 0; i < material->GetTextureCount(aiTextureType_DIFFUSE); i++)
+			{
+				aiString str;
+				material->GetTexture(aiTextureType_DIFFUSE, i, &str);
+
+				GLuint textureID = LoadTexture(str.C_Str());
+				textures.push_back(textureID); 
+
+				meshEntry.TextureIndex = textureID;
+			}
 
 			//vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 			//textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+			
 		}
+
+		meshEntries.push_back(meshEntry);	
 	}
 
 	//2. BUFFER THE DATA
@@ -208,7 +231,7 @@ bool Model::Load(const char* file_name)
 				{
 					aiVertexWeight weight = bone->mWeights[j];
 
-					int vertID = MeshEntries[meshIndex].BaseVertex + weight.mVertexId; //the vertex id + offset 
+					int vertID = meshEntries[meshIndex].BaseVertex + weight.mVertexId; //the vertex id + offset 
 				
 					for(int k = 0; k < 4; k++)
 					{
@@ -323,28 +346,22 @@ void Model::Render(GLuint shader)
 {
 	glBindVertexArray(vao);
 		
-	if(MeshEntries.size() > 1)
+	if(meshEntries.size() > 1)
 	{
-		for(int meshEntryIdx = 0; meshEntryIdx < MeshEntries.size(); meshEntryIdx++)
+		for(int meshEntryIdx = 0; meshEntryIdx < meshEntries.size(); meshEntryIdx++)
 		{
-			const GLuint materialIndex = MeshEntries[meshEntryIdx].MaterialIndex;
-
-			assert(materialIndex < textures.size());
+			//const GLuint materialIndex = meshEntries[meshEntryIdx].MaterialIndex; //Each mesh entry has one material
+			//assert(materialIndex < textures.size());
 
 			glActiveTexture(GL_TEXTURE0);
-
-			// Now set the sampler to the correct texture unit
-			int samplerLocation = glGetUniformLocation(shader, "texture_diffuse");
-			glUniform1i(samplerLocation, 0);
-
-			// And finally bind the texture
-			glBindTexture(GL_TEXTURE_2D, textures[materialIndex].id);
+			//glUniform1i(glGetUniformLocation(shader, "texture_diffuse"), 0); //set the sampler in the shader to the correct texture 
+			glBindTexture(GL_TEXTURE_2D, meshEntries[meshEntryIdx].TextureIndex);
 
 			glDrawElementsBaseVertex(GL_TRIANGLES, 
-                                MeshEntries[meshEntryIdx].NumIndices, 
+                                meshEntries[meshEntryIdx].NumIndices, 
                                 GL_UNSIGNED_INT, 
-                                (void*)(sizeof(unsigned int) * MeshEntries[meshEntryIdx].BaseIndex), 
-                                MeshEntries[meshEntryIdx].BaseVertex);
+                                (void*)(sizeof(unsigned int) * meshEntries[meshEntryIdx].BaseIndex), 
+                                meshEntries[meshEntryIdx].BaseVertex);
 		}
 	}
 	else if(indices.size() > 0)
@@ -362,26 +379,6 @@ void Model::Render(GLuint shader)
 
 	// Make sure the VAO is not changed from the outside    
     //glBindVertexArray(0); //?
-}
-
-//This function loads all the textures used by the model of a given type
-vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
-{
-	vector<Texture> textures;
-
-	for(GLuint i = 0; i < mat->GetTextureCount(type); i++)
-	{
-		aiString str;
-		mat->GetTexture(type, i, &str);
-
-		Texture texture;
-		texture.id = LoadTexture(str.C_Str());
-		texture.type = typeName;
-		texture.path = str;
-		textures.push_back(texture); //TODO: sans optimisation, for now (see texturesLoaded)
-	}
-
-	return textures;
 }
 
 GLuint Model::LoadTexture(const char* fileName) 

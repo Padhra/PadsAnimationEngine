@@ -62,11 +62,11 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					bone->parent = parent;
 					bone->parent->children.push_back(bone);
 					
-					bone->offset = convert_assimp_matrix(scene->mMeshes[meshIdx]->mBones[boneIdx]->mOffsetMatrix);
+					bone->offset = convertAssimpMatrix(scene->mMeshes[meshIdx]->mBones[boneIdx]->mOffsetMatrix);
 					bone->inv_offset = glm::inverse(bone->offset);
 
 					glm::vec3 offsetTranslation = decomposeT(bone->offset);
-					glm::vec3 mTransformTranslation = decomposeT(convert_assimp_matrix(aiBone->mTransformation));
+					glm::vec3 mTransformTranslation = decomposeT(convertAssimpMatrix(aiBone->mTransformation));
 
 					std::stringstream ss;
 
@@ -78,7 +78,7 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					std::cout << ss.str();
 
 					//bone->transform = glm::mat4(1);
-					bone->transform = convert_assimp_matrix(aiBone->mTransformation);
+					bone->transform = convertAssimpMatrix(aiBone->mTransformation);
 
 					root = bone->parent; //The last guy to get in here is the root, as it is depth first
 					

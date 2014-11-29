@@ -60,20 +60,13 @@ struct MeshEntry {
         NumIndices    = 0;
         BaseVertex    = 0;
         BaseIndex     = 0;
-		MaterialIndex = 0xFFFFFFFF;
+		TextureIndex = 0xFFFFFFFF;
     }
         
     unsigned int NumIndices;
     unsigned int BaseVertex;
     unsigned int BaseIndex;
-	unsigned int MaterialIndex; //MeshEntry::MaterialIndex points into one of the textures in m_Textures
-};
-
-struct Texture {
-
-	GLuint id;
-	std::string type;
-	aiString path;
+	unsigned int TextureIndex; 
 };
 
 class Model
@@ -83,9 +76,8 @@ class Model
 		GLuint vao;
 		vector<int> indices;
 
-		vector<Texture> textures;
-		vector<Texture> texturesLoaded; //To prevent reloading textures used across multiple meshes
-
+		vector<GLuint> textures;
+		
 		GLuint shaderProgramID;
 
 		int vertexCount;
@@ -99,14 +91,14 @@ class Model
 		~Model();
 
 		WorldProperties worldProperties;
-		vector<MeshEntry> MeshEntries;
+		vector<MeshEntry> meshEntries;
 
 		bool Load(const char* file_name);
 		
 		void Render(GLuint shader);
 
 		GLuint LoadTexture(const char* fileName);
-		vector<Texture> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
+		void LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
 
 		//Getters
 		GLuint GetVAO() { return vao; }

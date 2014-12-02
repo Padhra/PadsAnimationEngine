@@ -79,15 +79,15 @@ class Bone
 
 	public:
 
-		char name[50];
+		char name[1024];
 		GLfloat id; 
 
-		aiBone* aibone;
+		//TODO - Copy aibone weights in to own strutures on load
+		//aiBone* aibone; 
+		//std::vector<Weight> weights;
 
 		Bone* parent; 
 		std::vector<Bone*> children;
-
-		//std::vector<Weight> weights;
 
 		glm::mat4 offset;
 		glm::mat4 inv_offset;

@@ -7,8 +7,6 @@ layout(location = 2) in vec2 texture_coord;
 
 uniform mat4 mvpMatrix;
 
-uniform vec4 uniformColour = vec4(1.0, 0.0, 0.0, 0.5);
-
 out vec4 colour;
 out vec3 normal;
 out vec2 texCoord;
@@ -17,8 +15,6 @@ void main()
 {
 	vec4 Vertex = vec4(vertex_position.x, vertex_position.y, vertex_position.z, 1.0);
 	gl_Position = mvpMatrix * Vertex;
-	
-	colour = uniformColour;
 
 	texCoord = texture_coord;
 	normal = vertex_normal;

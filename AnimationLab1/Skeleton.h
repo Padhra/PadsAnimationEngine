@@ -17,7 +17,6 @@
 
 #include "helper.h"
 #include "Bone.h"
-//#include "Model.h"
 
 #include <glm\gtx\quaternion.hpp>
 
@@ -32,16 +31,13 @@ class Skeleton
 		std::map<int, Bone*> bones;
 		std::map<std::string, int> boneNameToID;
 
-		//animationIndex 0- walk, 1-run etc.
-
+		//TODO - animationIndex 0- walk, 1-run etc.
 		double animationDuration;
 		double animationTimer;
 
-		float animationSpeedScalar;
+		float animationSpeedScalar; //TODO - use
 
 		std::vector<std::string> bonesAdded;
-
-		Bone* GetBone(Bone* root, const char* name);
 
 	public:
 		Bone* root;
@@ -52,10 +48,10 @@ class Skeleton
 
 		static bool ConstraintsEnabled;
 
-		Skeleton(Model* myModel, bool keyframes);
+		Skeleton(Model* myModel);
 		virtual ~Skeleton();
 
-		bool ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, Bone* parent);
+		bool ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, Bone* parent, bool print = true);
 		void Animate(double deltaTime);
 
 		//void Control(bool *keyStates);
@@ -67,14 +63,17 @@ class Skeleton
 		void UpdateGlobalTransforms(Bone* bone, glm::mat4 parentTransform);
 
 		void PrintHeirarchy(Bone* root);
+		void PrintAiHeirarchy(aiNode* root);
+
+		bool LoadAnimation(const char* file_name);
 
 		//Getters
 		std::map<int, Bone*> GetBones() { return bones; }
 		
 		Bone* GetBone(int id) { return bones[id]; }
-		Bone* GetBone(std::string name);
-
+		Bone* GetBone(std::string name) { return bones[boneNameToID[name]]; }
 		Bone* operator [](int i) { return bones[i]; }
+
 		Bone* GetRootBone() { return root; }
 		
 		double GetAnimationTimer() { return animationTimer; }

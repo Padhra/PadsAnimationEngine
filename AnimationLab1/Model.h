@@ -28,7 +28,7 @@
 
 using namespace std;
 
-enum VB_TYPES //TODO - support models with different combinations of below
+enum VB_TYPES 
 {
 	POS_VB,
 	NORMAL_VB,

@@ -18,7 +18,7 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 
 Model::~Model()
 {
-	
+	delete skeleton;
 }
 
 bool Model::Load(const char* file_name)
@@ -173,13 +173,28 @@ bool Model::Load(const char* file_name)
 	{
 		//aiMesh* mesh = scene->mMeshes[0];
 
-		skeleton = new Skeleton(this, scene->HasAnimations());
+		skeleton = new Skeleton(this);
 		hasSkeleton = true;
 
 		printf ("\nBoneHierarchy\n");
+
 		
-		/*if (!*/skeleton->ImportAssimpBoneHierarchy(scene, scene->mRootNode, nullptr);//)
+		/*if (!*/skeleton->ImportAssimpBoneHierarchy(scene, scene->mRootNode, nullptr, true);//)
 			//fprintf (stderr, "\nERROR: could not import node tree from mesh\n");
+
+		//printf ("\n\n");
+
+		//skeleton->PrintAiHeirarchy(scene->mRootNode);
+
+		//for(int meshIdx = 0; meshIdx < scene->mNumMeshes; meshIdx++) //For every mesh
+		//{
+		//	for(int boneIdx = 0; boneIdx < scene->mMeshes[meshIdx]->mNumBones; boneIdx++) //For every bone in said mesh
+		//	{
+		//		std::cout << "\n";
+		//		std::cout << scene->mMeshes[meshIdx]->mBones[boneIdx]->mName.data;
+		//		std::cout << "\n";
+		//	}
+		//}
 
 		//std::string roon = skeleton->root->name;
 		//skeleton->PrintHeirarchy(skeleton->root);
@@ -188,6 +203,8 @@ bool Model::Load(const char* file_name)
 		boneIDs.resize(mesh->mNumVertices);*/
 		/*vector<glm::vec4> weightAmounts;
 		weightAmounts.resize(mesh->mNumVertices);*/
+
+		printf("\n\nLoading Weights in to buffers\n");
 
 		glm::vec4* boneIDs = (glm::vec4*)malloc (vertexCount * 4 * sizeof(float));
 		glm::vec4* weightAmounts = (glm::vec4*)malloc (vertexCount * 4 * sizeof(float));
@@ -201,25 +218,6 @@ bool Model::Load(const char* file_name)
 				boneIDs[v][w] = 0.0f;
 			}
 		}
-
-		/*for (int boneIdx = 0; boneIdx < skeleton->GetBones().size(); boneIdx++) 
-		{
-			const aiBone* bone = skeleton->GetBone(boneIdx)->bone;;
-
-			for (int j = 0; j < (int)bone->mNumWeights; j++) 
-			{
-				aiVertexWeight weight = bone->mWeights[j];
-				
-				for(int k = 0; k < 4; k++)
-				{
-					if(weightAmounts[weight.mVertexId][k] == 0.0f)
-					{
-						boneIDs[weight.mVertexId][k] = boneIdx;
-						weightAmounts[weight.mVertexId][k] = weight.mWeight;
-					}
-				}
-			}
-		}*/
 
 		for (int meshIndex = 0; meshIndex < scene->mNumMeshes; meshIndex++)
 		{
@@ -259,81 +257,6 @@ bool Model::Load(const char* file_name)
 		glEnableVertexAttribArray (WEIGHT_VB);
 	}
 
-	if(scene->HasAnimations())
-	{
-		//TODO- multiple animation support
-		aiAnimation* anim = scene->mAnimations[0];
-
-		/*printf ("animation name: %s\n", anim->mName.C_Str ());
-		printf ("animation has %i node channels\n", anim->mNumChannels);
-		printf ("animation has %i mesh channels\n", anim->mNumMeshChannels);
-		printf ("animation duration %f\n", anim->mDuration);
-		printf ("ticks per second %f\n", anim->mTicksPerSecond);*/
-
-		skeleton->SetAnimDuration(anim->mDuration);
-
-		//printf ("anim duration is %f\n", anim->mDuration);
-			
-		// get the node channels
-		for (int i = 0; i < (int)anim->mNumChannels; i++) 
-		{
-			aiNodeAnim* chan = anim->mChannels[i];
-			
-			Bone* bone = skeleton->GetBone(chan->mNodeName.C_Str ());
-				
-			if (!bone) 
-			{
-				fprintf (stderr, "\nWARNING: did not find node named %s in skeleton."
-					"animation broken.\n", chan->mNodeName.C_Str ());
-				continue;
-			}
-
-			// add position keys to node
-			for (int i = 0; i < chan->mNumPositionKeys; i++) 
-			{
-				aiVectorKey key = chan->mPositionKeys[i];
-
-				PosKeyFrame* pkf = new PosKeyFrame;
-
-				pkf->position = glm::vec3(key.mValue.x, key.mValue.y, key.mValue.z);
-				pkf->time = key.mTime; //TODO - check if time varies for each variable??
-
-				bone->posKeyframes.push_back(pkf);
-			}
-
-			// add rotation keys to node
-			for (int i = 0; i < chan->mNumRotationKeys; i++) 
-			{
-				aiQuatKey key = chan->mRotationKeys[i];
-
-				RotKeyFrame* rkf = new RotKeyFrame;
-
-				rkf->rotation.x = key.mValue.x;
-				rkf->rotation.y = key.mValue.y;
-				rkf->rotation.z = key.mValue.z;
-				rkf->rotation.w = key.mValue.w;
-
-				rkf->time = key.mTime;
-
-				bone->rotKeyframes.push_back(rkf);
-			}
-
-			// add scaling keys to node
-			//for (int i = 0; i < sn->num_sca_keys; i++) 
-			//{
-			//	aiVectorKey key = chan->mScalingKeys[i];
-			//	sn->sca_keys[i].v[0] = key.mValue.x;
-			//	sn->sca_keys[i].v[1] = key.mValue.y;
-			//	sn->sca_keys[i].v[2] = key.mValue.z;
-			//	sn->sca_key_times[i] = key.mTime;
-			//}
-		} 
-	}
-	else 
-	{
-		fprintf (stderr, "WARNING: no animations found in mesh file\n");
-	}
-
 	aiReleaseImport (scene);
 	printf ("\nMesh loaded.\n");
 
@@ -366,9 +289,10 @@ void Model::Render(GLuint shader)
 	}
 	else if(indices.size() > 0)
 	{
-		glPolygonMode(GL_FRONT, GL_LINE); 
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, meshEntries[0].TextureIndex);
+
 		glDrawElements( GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
-		glPolygonMode(GL_FRONT, GL_FILL); 
 	}
 	else
 	{
@@ -395,6 +319,8 @@ GLuint Model::LoadTexture(const char* fileName)
 	}
 	catch (Magick::Error& Error) {
 		std::cout << "Error loading texture '" << fullPath << "': " << Error.what() << std::endl;
+
+		delete image;
 		return false;
 	}
 
@@ -414,6 +340,7 @@ GLuint Model::LoadTexture(const char* fileName)
 	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 			
 	glBindTexture(GL_TEXTURE_2D, 0); //unbind
-    
+
+	delete image;  
 	return textureID;
 }

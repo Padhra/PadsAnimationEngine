@@ -159,7 +159,7 @@
             </node>
           </node>
           <node id="Pinky_Lower" name="Pinky Lower" sid="Pinky_Lower" type="JOINT">
-            <matrix sid="transform">-2.64496e-7 0.2216448 -0.9751275 3.04143e-8 -0.4600049 0.8658315 0.1968021 1.692817 0.8879163 0.4485634 0.1019575 0.4470491 0 0 0 1</matrix>
+            <matrix sid="transform">-0.64496e-7 99.2216448 -0.9751275 3.04143e-8 -0.4600049 0.8658315 0.1968021 1.692817 0.8879163 0.4485634 0.1019575 0.4470491 0 0 0 1</matrix>
             <node id="Pinky_Middle" name="Pinky Middle" sid="Pinky_Middle" type="JOINT">
               <matrix sid="transform">0.9933423 -0.1152 -1.47834e-8 -2.98023e-8 0.1123347 0.9686353 -0.2216443 0.2231903 0.02553343 0.2201686 0.9751276 0 0 0 0 1</matrix>
               <node id="Pinky_Upper" name="Pinky Upper" sid="Pinky_Upper" type="JOINT">

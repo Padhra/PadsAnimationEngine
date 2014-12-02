@@ -14,21 +14,25 @@ class Node
 
 	public:
 
+		//For creating the box 
 		static ShaderManager* shaderManager;
 		static vector<Model*>* objectList;
+		
+		Model* box;
 
 		Node(glm::vec3 position) 
 		{
 			box = new Model(position, glm::mat4(1), glm::vec3(.03), BOX, shaderManager->GetShaderProgramID("diffuse"));
-
 			objectList->push_back(box);
 		};
+
+		~Node()
+		{
+			//delete box; //Clean this up in model ?
+		}
 
 		glm::vec3 GetPosition()
 		{
 			return box->worldProperties.translation;
 		}
-
-		Model* box;
-
 };

@@ -33,9 +33,23 @@ class Camera
 		float turnSpeed;
 		float moveSpeed;
 		
-		void Init() { turnSpeed =  0.0005f; moveSpeed = .01f; }
+		void Init(float p_turnSpeed = 0.0005f, float p_moveSpeed = 0.01f ) { turnSpeed =  p_turnSpeed; moveSpeed = p_moveSpeed; }
 
-		void ProcessMouse(int x, int y, int deltaTime, int winw, int winh);
+		void ProcessMouse(int x, int y, int deltaTime, int winw, int winh)
+		{
+			horizontalAngle += turnSpeed * deltaTime * float(winw/2 - x);
+			verticalAngle += turnSpeed * deltaTime * float(winh/2 - y);
+
+			viewProperties.forward = glm::vec3(cos(verticalAngle) * sin(horizontalAngle),
+											   sin(verticalAngle),
+											   cos(verticalAngle) * cos(horizontalAngle));
+
+			glm::vec3 right = glm::vec3(sin(horizontalAngle - 3.14f/2.0f),
+										0,
+										cos(horizontalAngle - 3.14f/2.0f));
+
+			viewProperties.up = glm::cross(right, viewProperties.forward);
+		}
 };
 
 #endif

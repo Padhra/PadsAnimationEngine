@@ -28,26 +28,23 @@
 #include <vector>
 #include <list>
 
-#define MESH_FILE1 "Models/hand_with_animation.dae"
-#define MESH_FILE2 "Models/hand.dae"
-#define MESH_FILE3 "Models/cubeTri.obj"
-#define MESH_FILE4 "Models/boblampclean.md5mesh"
-#define MESH_FILE5 "Models/Cones3.dae"
-#define MESH_FILE6 "Models/Rikku.DAE"
-#define MESH_FILE7 "Models/izanugi.DAE"
-#define MESH_FILE8 "Models/Squall.DAE"
+#define HAND "Models/hand_with_animation.dae"
+#define CUBE "Models/cubeTri.obj"
+#define BOB "Models/boblampclean.md5mesh"
+#define CONES "Models/Cones3.dae"
+#define IZANUGI "Models/izanugi.DAE"
+#define SQUALL "Models/Squall.DAE"
+#define RIKKU "Models/Rikku6.DAE"
 
 #define PRECISION 3
 
 using namespace std;
 
-void processContinuousInput();
-void printouts();
-
 //Callbacks
 void keyPressed (unsigned char key, int x, int y); 
 void keyUp (unsigned char key, int x, int y); 
 void passiveMouseMotion(int x, int y);
+void mouseButton(int button, int state, int x, int y);
 void handleSpecialKeypress(int key, int x, int y);
 void handleSpecialKeyReleased(int key, int x, int y);
 void update();
@@ -57,8 +54,10 @@ bool isRightKeyPressed = false;
 bool isLeftKeyPressed = false;
 bool isUpKeyPressed = false;
 bool isDownKeyPressed = false;
-
 bool keyStates[256] = {false}; // Create an array of boolean values of length 256 (0-255)
+
+void processContinuousInput();
+void printouts();
 
 Camera camera;
 glm::mat4 projectionMatrix; // Store the projection matrix
@@ -85,8 +84,6 @@ Spline targetPath;
 int testAnimBone = 0;
 int selectedTarget = 0;
 
-GLuint line_vao;
-
 std::vector<glm::vec3> lines;
 
 short uiMode = 0;
@@ -98,27 +95,28 @@ bool firstRun = true;
 
 int selectedFile = 1;
 
+bool freeMouse = false;
+
 int main(int argc, char** argv)
 {
 	// Set up the window
 	glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
-    
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition (100, 100); 
-    glutCreateWindow("Directed by M. Pat Mahalaralan");
+    glutCreateWindow("Final Fantasy X - Freemium Edition");
 
 	glutSetCursor(GLUT_CURSOR_NONE);
 	
 	// REGISTER GLUT CALLBACKS
 
-	glutDisplayFunc(draw);
+	//glutDisplayFunc(draw);
 	//glutReshapeFunc (reshape);
 	glutKeyboardFunc(keyPressed); // Tell GLUT to use the method "keyPressed" for key presses  
 	glutKeyboardUpFunc(keyUp); // Tell GLUT to use the method "keyUp" for key up events  
 	glutSpecialFunc(handleSpecialKeypress);
 	glutSpecialUpFunc(handleSpecialKeyReleased);
-	//glutMouseFunc (MouseButton);
+	glutMouseFunc (mouseButton);
 	//glutMotionFunc (MouseMotion);
 	glutPassiveMotionFunc(passiveMouseMotion);
 	glutIdleFunc (update);
@@ -135,55 +133,36 @@ int main(int argc, char** argv)
     }
 	#pragma endregion 
 
-	projectionMatrix = glm::perspective(60.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f /*near plane*/, 100.f /*far plane*/); // Create our perspective projection matrix
-
-	camera.Init(); //TODO - constructor for camera
-	camera.viewProperties.position = glm::vec3(0.0f, 0.0f, 0.0f);
-	//camera.viewProperties.forward = glm::vec3(0.f, 0.f, -10.f); //horizontal and vertical control this
-	camera.viewProperties.up = glm::vec3(0.0f, 1.0f, 0.0f);
-
 	glClearColor(0.5,0.5,0.5,1);
 	glEnable (GL_CULL_FACE); // cull face 
 	glCullFace (GL_BACK); // cull back face 
 	glFrontFace (GL_CCW); // GL_CCW for counter clock-wise
 	glEnable(GL_DEPTH_TEST);
 
-	//shaderManager.CreateShaderProgram("skinned", "Shaders/skinned.vs", "Shaders/skinned.ps");
-	//shaderManager.CreateShaderProgram("skinnedWf", "Shaders/skinned.vs", "Shaders/skinnedwireframe.ps");
+	projectionMatrix = glm::perspective(60.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f /*near plane*/, 100.f /*far plane*/); // Create our perspective projection matrix
+
+	//TODO - constructor for camera
+	camera.Init(0.0002f, 0.005f); 
+	camera.viewProperties.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	//camera.viewProperties.forward = glm::vec3(0.f, 0.f, -10.f); //horizontal and vertical control this
+	camera.viewProperties.up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	shaderManager.CreateShaderProgram("skinned", "Shaders/skinned.vs", "Shaders/skinned.ps");
 	shaderManager.CreateShaderProgram("diffuse", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
 
+	//TODO - make this nicer
 	Node::objectList = &objectList;
 	Node::shaderManager = &shaderManager;
 
-	//LINE
-	glGenVertexArrays(1, &line_vao);
-	glBindVertexArray (line_vao);
-	
-	lines.push_back(glm::vec3(0,0,0));
-	lines.push_back(glm::vec3(0,100,0));
-
-	GLuint buf;
-	glGenBuffers(1, &buf);
-	glBindBuffer (GL_ARRAY_BUFFER, buf);
-	glBufferData (GL_ARRAY_BUFFER, 3 * lines.size() * sizeof (GLfloat), &lines[0], GL_STATIC_DRAW);
-	glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-	glEnableVertexAttribArray (0);
-
-	int index;
-
-	//KEYFRAMED HAND
-	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), MESH_FILE1, shaderManager.GetShaderProgramID("skinned")));
-	
-	//BOB
 	glm::quat q = glm::quat();
-		
-	//q *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
-	//q *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
-	//q *= glm::angleAxis(0.0f, glm::vec3(0,0,1));
+	q *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
+	q *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
+	q *= glm::angleAxis(0.0f, glm::vec3(0,0,1));
 
-	objectList.push_back(new Model(glm::vec3(0,0,0), glm::toMat4(q), glm::vec3(.0001), MESH_FILE6, shaderManager.GetShaderProgramID("diffuse")));
-	index = objectList.size()-1;
+	objectList.push_back(new Model(glm::vec3(0,0,5), glm::toMat4(q), glm::vec3(1), "Models/DarMaul_LowPoly.dae", shaderManager.GetShaderProgramID("skinned")));
+	//objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Models/sora.dae");
 	
+	#pragma region IK Stuff
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
 	//
 	//Bone* fingersL = objectList[index]->GetSkeleton()->GetBone("fingers.L");
@@ -223,25 +202,12 @@ int main(int argc, char** argv)
 	//Bone* upperArmR = objectList[index]->GetSkeleton()->GetBone("upperarm.R");
 	//upperArmR->transform = glm::rotate(upperArmR->transform, 70.0f, glm::vec3(1,0,0));
 
-	
-	//CONES
-	//q = glm::angleAxis(-90.0f, glm::vec3(1,0,0));
-	//objectList.push_back(new Model(glm::vec3(5,0,0), glm::toMat4(q), glm::vec3(1), MESH_FILE5, shaderManager.GetShaderProgramID("skinnedWf")));
-	//index = objectList.size()-1;
-
-	//std::vector<Bone*> coneChain;
-
-	//coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[3]); 
-	//coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[2]); 
-	//coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[1]);
-	//coneChain.push_back(objectList[index]->GetSkeleton()->GetBones()[0]); //effector
-	//objectList.at(index)->GetSkeleton()->DefineIKChain("chain1", coneChain);
-
 	//TARGET
 	//target = new Model(glm::vec3(0,0,5), glm::mat4(1), glm::vec3(.1), MESH_FILE3, shaderManager.GetShaderProgramID("diffuse"));
 	//objectList.push_back(target);
 
 	//targetPath.SetMode(InterpolationMode::Cubic);
+	#pragma endregion
 
 	glutMainLoop();
     
@@ -251,10 +217,12 @@ int main(int argc, char** argv)
 // GLUT CALLBACK FUNCTIONS
 void update()
 {
+	//Calculate deltaTime
 	int timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
     deltaTime = timeSinceStart - oldTimeSinceStart;
     oldTimeSinceStart = timeSinceStart;
 
+	//Calculate fps
 	frames++;
 	frameCounterTime += deltaTime;
 	if(frameCounterTime > 1000)
@@ -268,29 +236,29 @@ void update()
 	{
 		if(objectList[i]->HasSkeleton())
 		{
-			//TODO - If animationMode == IK .. and so on
+		//	//TODO - If animationMode == IK .. and so on
 			int numbones = objectList[i]->GetSkeleton()->GetBones().size();
 			int testAnimMod = testAnimBone % numbones;
 			Bone* bone = objectList[i]->GetSkeleton()->GetBones()[testAnimMod];
 
 			if(uiMode == UIMode::xAngle && isLeftKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(1,0,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(1,0,0));
 			else if(uiMode == UIMode::xAngle && isRightKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(-1,0,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(-1,0,0));
 
 			if(uiMode == UIMode::yAngle && isLeftKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,1,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,1,0));
 			else if(uiMode == UIMode::yAngle && isRightKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,-1,0));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,-1,0));
 
 			if(uiMode == UIMode::zAngle && isLeftKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,0,1));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,0,1));
 			else if(uiMode == UIMode::zAngle && isRightKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 1.0f, glm::vec3(0,0,-1));
+				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,0,-1));
 
-			if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
-				objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
-																													//if no target do nothing?
+		//	if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
+		//		objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
+		//																											//if no target do nothing?
 			if(objectList[i]->GetSkeleton()->hasKeyframes)
 				objectList[i]->GetSkeleton()->Animate(deltaTime); //this overwrites control above
 		}
@@ -311,11 +279,12 @@ void update()
 	draw();
 }
 
-//Draw loops through each 3d object, and switches to the correct shader for that object, and full the uniform matrices with the up-to-date values,
+//Draw loops through each 3d object, and switches to the correct shader for that object, and fill the uniform matrices with the up-to-date values,
 //before finally binding the VAO and drawing with verts or indices
 void draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
 	glm::mat4 viewMatrix = glm::lookAt(camera.viewProperties.position, camera.viewProperties.position + camera.viewProperties.forward, camera.viewProperties.up); 
 
@@ -362,25 +331,7 @@ void draw()
 		objectList.at(i)->Render(shaderManager.GetCurrentShaderProgramID());
 	}	
 
-	printouts(); //All the DrawText stuff
-
-	if(targetPath.nodes.size() > 0)
-	{
-		glUseProgram(shaderManager.GetShaderProgramID("diffuse"));
-	
-		float green[4] = {0,1,0,1}; float red[4] = {1,0,0,1};
-		int uniformColourLocation = glGetUniformLocation(shaderManager.GetShaderProgramID("diffuse"), "uniformColour"); 
-		glUniform4fv(uniformColourLocation, 1, green);
-
-		glm::mat4 MVP = projectionMatrix * viewMatrix * targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->GetModelMatrix();
-		int mvpMatrixLocation = glGetUniformLocation(shaderManager.GetShaderProgramID("diffuse"), "mvpMatrix"); // Get the location of our mvp matrix in the shader
-		glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP/*&MVP[0][0]*/)); // Send our model/view/projection matrix to the shader
-
-		glBindVertexArray( line_vao );
-		glDrawArrays(GL_LINES, 0, lines.size()*2 );
-
-		glUniform4fv(uniformColourLocation, 1, red);
-	}
+	printouts();
 
 	glutSwapBuffers();
 }
@@ -391,6 +342,10 @@ void keyPressed (unsigned char key, int x, int y)
 
 	if(key == 32)
 		altDirectional = !altDirectional;
+
+	if(key == 27)
+		if(!freeMouse)
+			freeMouse;
 
 	//SPLINE EDITOR
 	if(key == 'o')
@@ -448,6 +403,9 @@ void keyPressed (unsigned char key, int x, int y)
 		uiMode = UIMode::yAngle;
 	if(key == 'z')
 		uiMode = UIMode::zAngle;
+
+	if(key == 'z')
+		freeMouse = !freeMouse;
 }  
   
 void keyUp (unsigned char key, int x, int y) 
@@ -457,17 +415,38 @@ void keyUp (unsigned char key, int x, int y)
 
 void passiveMouseMotion(int x, int y)  
 {
-	//As glutWarpPoint triggers an event callback to Mouse() we need to return to ensure it doesn't recursively call
-    static bool just_warped = false;
-    if(just_warped) {
-        just_warped = false;
-        return;
+
+	if(!freeMouse)
+	{
+		//As glutWarpPoint triggers an event callback to Mouse() we need to return to ensure it doesn't recursively call
+		static bool just_warped = false;
+		if(just_warped) {
+			just_warped = false;
+			return;
+		}
+
+		//x *= mouseSensitivity;
+		//y *= mouseSensitivity;
+
+		camera.ProcessMouse(x, y, deltaTime, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	
+		glutWarpPointer(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
+		just_warped = true;
+	}
+}
+
+void mouseButton(int button, int state, int x, int y)
+{
+	switch(button) {
+		case GLUT_LEFT_BUTTON:
+			if(freeMouse)
+			{
+				freeMouse = false;
+				glutSetCursor(GLUT_CURSOR_NONE);
+			}
+			break;
     }
-
-	camera.ProcessMouse(x, y, deltaTime, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-	glutWarpPointer(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
-	just_warped = true;
 }
 
 void handleSpecialKeypress(int key, int x, int y)
@@ -552,7 +531,14 @@ void handleSpecialKeyReleased(int key, int x, int y)
 void processContinuousInput()
 {
 	if(keyStates[27])
-		exit(0);
+	{
+		if(!freeMouse)
+		{
+			freeMouse = true;
+			glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+		}
+	}
+	//exit(0);
 
 	//TODO
 	//camera.processKeyboard(keyStates);
@@ -660,7 +646,7 @@ void printouts()
 	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
 
 	//PRINT SPLINE INFO
-	ss.str(std::string());
+	/*ss.str(std::string());
 	ss << "SPLINE EDITOR ";
 	drawText(20,220, ss.str().c_str());
 
@@ -705,7 +691,7 @@ void printouts()
 
 	ss.str(std::string());
 	ss << "|m| Move Selected Node";
-	drawText(20,40, ss.str().c_str());
+	drawText(20,40, ss.str().c_str());*/
 
 	//ss.str(std::string()); // clear
 	//ss << std::fixed << std::setprecision(PRECISION) << "|t| target (x: " << target->worldProperties.translation.x << ", y: " 
@@ -713,25 +699,31 @@ void printouts()
 	//drawText(20,20, ss.str().c_str());
 
 	//PRINT BONE SELECTION (of first object)
-	//ss.str(std::string()); // clear
-	//ss << "SKELETAL CONTROLS";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),100, ss.str().c_str());
-	//
-	//Bone* bone = objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size());
+	if(objectList.size() > 0)
+	{
+		if(objectList[0]->HasSkeleton())
+		{
+			ss.str(std::string()); // clear
+			ss << "SKELETAL CONTROLS";
+			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),100, ss.str().c_str());
+	
+			Bone* bone = objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size());
 
-	//ss.str(std::string()); // clear
-	//ss << "Selected Bone: [" << int(bone->id) << "] " << bone->name << " |b|";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
-	//
-	//ss.str(std::string()); // clear
-	//ss << "x Angle: " << bone->GetEulerAngles().x << " |x|";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),60, ss.str().c_str());
-	//ss.str(std::string()); // clear
-	//ss << "y Angle: " << bone->GetEulerAngles().y << " |y|";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),40, ss.str().c_str());
-	//ss.str(std::string()); // clear
-	//ss << "z Angle: " << bone->GetEulerAngles().z << " |z|";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
+			ss.str(std::string()); // clear
+			ss << "Selected Bone: [" << int(bone->id) << "] " << bone->name << " |b|";
+			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
+	
+			ss.str(std::string()); // clear
+			ss << "x Angle: " << bone->GetEulerAngles().x << " |x|";
+			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),60, ss.str().c_str());
+			ss.str(std::string()); // clear
+			ss << "y Angle: " << bone->GetEulerAngles().y << " |y|";
+			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),40, ss.str().c_str());
+			ss.str(std::string()); // clear
+			ss << "z Angle: " << bone->GetEulerAngles().z << " |z|";
+			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
+		}
+	}
 
 	//PRINT CAMERA
 	ss.str(std::string()); // clear
@@ -759,11 +751,16 @@ void printouts()
 	//}
 
 	//PRINT ANIMATION TIMER
-	/*if(objectList[i]->GetSkeleton()->hasKeyframes)
+	//TODO - selected model
+	if(objectList[0]->HasSkeleton())
 	{
-		ss << "AnimationTimer: " << objectList[i]->GetSkeleton()->GetAnimationTimer();
-		drawText(20,50, ss.str().c_str());
-	}*/
+		if(objectList[0]->GetSkeleton()->hasKeyframes)
+		{
+			ss.str(std::string()); // clear
+			ss << "AnimationTimer: " << objectList[0]->GetSkeleton()->GetAnimationTimer();
+			drawText(20,50, ss.str().c_str());
+		}
+	}
 }
 
 

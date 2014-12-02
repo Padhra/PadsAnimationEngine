@@ -73,6 +73,8 @@ class Model
 {
 	private:
 
+		std::string fileName;
+
 		GLuint vao;
 		vector<int> indices;
 
@@ -100,6 +102,8 @@ class Model
 		GLuint LoadTexture(const char* fileName);
 		void LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
 
+		void LoadAnimation(const char* file_name) { if (hasSkeleton) skeleton->LoadAnimation(file_name); else std::cout << "\nCan't load an animation, there's no skeleton!\n"; }
+
 		//Getters
 		GLuint GetVAO() { return vao; }
 		GLuint GetShaderProgramID() { return shaderProgramID; }
@@ -107,6 +111,8 @@ class Model
 		Skeleton* GetSkeleton() { return skeleton; }
 		bool HasSkeleton() { return hasSkeleton; }
 		vector<int> GetIndices() { return indices; }
+
+		std::string GetFileName() { return fileName; }
 		
 		glm::mat4 GetModelMatrix() 
 		{ 

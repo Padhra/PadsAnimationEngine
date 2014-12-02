@@ -9,9 +9,6 @@
 #include <glm\glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#define MAX_BONES 32 
-#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
-
 glm::mat4 convertAssimpMatrix (aiMatrix4x4 m);
 glm::quat formQuaternion(double x, double y, double z, double angle);
 glm::vec3 lerp(glm::vec3 v0, glm::vec3 v1, float t);

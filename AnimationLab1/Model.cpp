@@ -13,6 +13,8 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 
 	Load(file_name);
 
+	fileName = file_name;
+
 	shaderProgramID = p_shaderProgramID;
 }
 

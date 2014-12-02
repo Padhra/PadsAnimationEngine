@@ -1,6 +1,8 @@
 #include "ShaderManager.h"
 #include "Shader.h"
 
+ShaderManager* ShaderManager::Instance;
+
 //Creates a program and adds it to the shader program list
 GLuint ShaderManager::CreateShaderProgram(std::string name, const std::string& vsFilename, const std::string& psFilename)
 {
@@ -28,6 +30,7 @@ GLuint ShaderManager::CreateShaderProgram(std::string name, const std::string& v
 	ps.CompileShader(shaderProgramID, GL_FRAGMENT_SHADER);
 
 	shaderProgramList[name] = shaderProgramID;
+	shaderProgramListReversed[shaderProgramID] = name;
 	
 	return shaderProgramID;
 }

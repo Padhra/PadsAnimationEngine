@@ -6,7 +6,7 @@
 #include "Model.h"
 #include "ShaderManager.h"
 
-#define BOX "Models/cubeTri.obj"
+#define BOX "Models/cubeTri.obj" //TODO - move definitions to a common.h
 
 class Node
 {
@@ -15,14 +15,13 @@ class Node
 	public:
 
 		//For creating the box 
-		static ShaderManager* shaderManager;
 		static vector<Model*>* objectList;
 		
 		Model* box;
 
 		Node(glm::vec3 position) 
 		{
-			box = new Model(position, glm::mat4(1), glm::vec3(.03), BOX, shaderManager->GetShaderProgramID("diffuse"));
+			box = new Model(position, glm::mat4(1), glm::vec3(.03f), BOX, ShaderManager::Instance->GetShaderProgramID("diffuse"));
 			objectList->push_back(box);
 		};
 

@@ -6,6 +6,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm\gtx\quaternion.hpp>
 
 #include <assimp/cimport.h> // C importer
 #include <assimp/scene.h> // collects data
@@ -17,8 +18,7 @@
 
 #include "helper.h"
 #include "Bone.h"
-
-#include <glm\gtx\quaternion.hpp>
+#include "Common.h"
 
 class Model;
 
@@ -31,11 +31,11 @@ class Skeleton
 		std::map<int, Bone*> bones;
 		std::map<std::string, int> boneNameToID;
 
-		//TODO - animationIndex 0- walk, 1-run etc.
+		int animationIndex;
+		int numAnimations;
+
 		double animationDuration;
 		double animationTimer;
-
-		float animationSpeedScalar; //TODO - make static
 
 		std::vector<std::string> bonesAdded;
 
@@ -47,6 +47,7 @@ class Skeleton
 		GLuint line_vao;
 
 		static bool ConstraintsEnabled;
+		static float AnimationSpeedScalar;
 
 		Skeleton(Model* myModel);
 		virtual ~Skeleton();
@@ -80,6 +81,8 @@ class Skeleton
 
 		//Setters
 		void SetAnimDuration(double pAnimationDuration) { animationDuration = pAnimationDuration; }
+
+		void SetAnimation(int index) { if(animationIndex < numAnimations) animationIndex = index; }
 };
 
 #endif

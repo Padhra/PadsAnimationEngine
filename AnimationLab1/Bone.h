@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "Helper.h"
+#include "Common.h"
 
 struct PosKeyFrame
 {
@@ -26,16 +27,10 @@ struct RotKeyFrame
 	double time;
 };
 
-struct ScaleKeyFrame
+struct KeyframeAnimation
 {
-	glm::vec3 scale;
-	double time;
-};
-
-struct Weight
-{
-	int vertexID;
-	int weighting;
+	std::vector<PosKeyFrame*> posKeyframes;
+	std::vector<RotKeyFrame*> rotKeyframes;
 };
 
 struct DOFLimits
@@ -82,10 +77,6 @@ class Bone
 		char name[1024];
 		GLuint id; 
 
-		//TODO - Copy aibone weights in to own strutures on load
-		//aiBone* aibone; 
-		//std::vector<Weight> weights;
-
 		Bone* parent; 
 		std::vector<Bone*> children;
 
@@ -96,9 +87,7 @@ class Bone
 		glm::mat4 finalTransform;
 		glm::mat4 globalTransform;
 
-		std::vector<PosKeyFrame*> posKeyframes;
-		std::vector<RotKeyFrame*> rotKeyframes;
-		std::vector<ScaleKeyFrame*> scaleKeyframes;
+		KeyframeAnimation animations[MAX_ANIMATIONS];
 
 		DOFLimits dofLimits;
 

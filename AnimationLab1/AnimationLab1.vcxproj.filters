@@ -31,6 +31,12 @@
     <Filter Include="Source Files\Spline">
       <UniqueIdentifier>{a667f8db-1261-4f44-8a52-964d1ee88194}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\LevelEditor">
+      <UniqueIdentifier>{423f0781-449b-4c55-a3b6-a91071a233eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Player">
+      <UniqueIdentifier>{d014a99d-754f-4468-83ce-e8cae14098e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -91,6 +97,21 @@
     </ClInclude>
     <ClInclude Include="Node.h">
       <Filter>Header Files\Spline</Filter>
+    </ClInclude>
+    <ClInclude Include="LevelObject.h">
+      <Filter>Header Files\LevelEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="LevelSaver.h">
+      <Filter>Header Files\LevelEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="Level.h">
+      <Filter>Header Files\LevelEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header Files\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

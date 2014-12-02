@@ -72,11 +72,16 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					bone->offset = convertAssimpMatrix(scene->mMeshes[meshIdx]->mBones[boneIdx]->mOffsetMatrix);
 					bone->inv_offset = glm::inverse(bone->offset);
 
-					glm::vec3 offsetTranslation = decomposeT(bone->offset);
-					glm::vec3 mTransformTranslation = decomposeT(convertAssimpMatrix(aiBone->mTransformation));
+					bone->transform = convertAssimpMatrix(aiBone->mTransformation);
 
+					root = bone->parent; //The last guy to get in here is the root, as it is depth first
+
+					#pragma region PRINT OUT
 					if(print)
 					{
+						glm::vec3 offsetTranslation = decomposeT(bone->offset);
+						glm::vec3 mTransformTranslation = decomposeT(convertAssimpMatrix(aiBone->mTransformation));
+
 						std::stringstream ss;
 						ss << "\nYES!";
 						ss << "\nbone->name: " << bone->name;
@@ -86,10 +91,8 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 						ss << "\nmTransform: (x:" << mTransformTranslation.x << ", y: " << mTransformTranslation.y << ", z: " << mTransformTranslation.z << ")";
 						std::cout << ss.str();
 					}
-
-					bone->transform = convertAssimpMatrix(aiBone->mTransformation);
-
-					root = bone->parent; //The last guy to get in here is the root, as it is depth first
+					#pragma endregion
+					
 					
 					break; 
 				}

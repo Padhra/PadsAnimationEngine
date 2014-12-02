@@ -33,7 +33,7 @@ enum VB_TYPES
 	POS_VB,
 	NORMAL_VB,
 	TEXCOORD_VB,
-	BONE_VB,
+	//BONE_VB,
 	WEIGHT_VB,
 	INDEX_VB,
 	NUM_VBs            

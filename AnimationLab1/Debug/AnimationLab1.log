@@ -1,8 +1,8 @@
-﻿Build started 02/12/2014 10:17:56.
+﻿Build started 02/12/2014 13:41:03.
      1>Project "C:\Users\Patrick\Desktop\AnimationLab1\AnimationLab1\AnimationLab1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\ImageMagick-6\Include" /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\assimp--3.0.1270-sdk\include" /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\glew-1.10.0\include" /IC:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\freeglut\include /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\glm-0.9.5.4\glm" /ZI /nologo /W3 /WX- /MP /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Model.cpp
-         Model.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\ImageMagick-6\Include" /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\assimp--3.0.1270-sdk\include" /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\glew-1.10.0\include" /IC:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\freeglut\include /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\glm-0.9.5.4\glm" /ZI /nologo /W3 /WX- /MP /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         main.cpp
      1>c:\users\patrick\desktop\animationlab1\animationlab1\imagemagick-6\include\magick++\drawable.h(456): warning C4251: 'Magick::DrawableBezier::_coordinates' : class 'std::list<_Ty>' needs to have dll-interface to be used by clients of class 'Magick::DrawableBezier'
                  with
                  [
@@ -280,13 +280,17 @@
                      _Traits=std::char_traits<char>,
                      _Alloc=std::allocator<char>
                  ]
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\model.cpp(54): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\model.cpp(75): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\model.cpp(87): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\model.cpp(116): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\model.cpp(222): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\model.cpp(224): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\model.cpp(274): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\node.h(25): warning C4305: 'argument' : truncation from 'double' to 'const float'
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\spline.h(44): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\spline.h(81): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\spline.h(114): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(232): warning C4244: '+=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(240): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(296): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(435): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+         GLM: perspective function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
+         GLM: angleAxis function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
+         GLM: rotate function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
          GLM: pitch function returning degrees is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
          GLM: yaw function returning degrees is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
          GLM: roll function returning degrees is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
@@ -307,4 +311,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:10.74
+Time Elapsed 00:00:09.34

@@ -80,7 +80,7 @@ class Bone
 	public:
 
 		char name[1024];
-		GLfloat id; 
+		GLuint id; 
 
 		//TODO - Copy aibone weights in to own strutures on load
 		//aiBone* aibone; 

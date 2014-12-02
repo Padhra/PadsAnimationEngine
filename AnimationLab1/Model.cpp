@@ -126,8 +126,6 @@ bool Model::Load(const char* file_name)
 
 			//vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 			//textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-
-			
 		}
 
 		meshEntries.push_back(meshEntry);	
@@ -199,62 +197,64 @@ bool Model::Load(const char* file_name)
 		//std::string roon = skeleton->root->name;
 		//skeleton->PrintHeirarchy(skeleton->root);
 
-		/*vector<glm::vec4> boneIDs;
-		boneIDs.resize(mesh->mNumVertices);*/
-		/*vector<glm::vec4> weightAmounts;
-		weightAmounts.resize(mesh->mNumVertices);*/
-
 		printf("\n\nLoading Weights in to buffers\n");
 
-		glm::vec4* boneIDs = (glm::vec4*)malloc (vertexCount * 4 * sizeof(float));
-		glm::vec4* weightAmounts = (glm::vec4*)malloc (vertexCount * 4 * sizeof(float));
+		stringstream debug;
 
-		//default weight amounts to 0
-		for(int v = 0; v < vertexCount; v++)
-		{
-			for(int w = 0; w < 4; w++)
-			{
-				weightAmounts[v][w] = 0.0f;
-				boneIDs[v][w] = 0.0f;
-			}
-		}
+		#define NUM_WEIGHTS_PER_VERTEX 4
+
+		struct VertexWeight {
+			GLuint boneIDs[NUM_WEIGHTS_PER_VERTEX];
+			float weights[NUM_WEIGHTS_PER_VERTEX];
+		};
+
+		vector<VertexWeight> vertexWeights; 
+		vertexWeights.resize(vertexCount);
 
 		for (int meshIndex = 0; meshIndex < scene->mNumMeshes; meshIndex++)
 		{
 			for(int boneIdx = 0; boneIdx < scene->mMeshes[meshIndex]->mNumBones; boneIdx++)
 			{
 				const aiBone* bone = scene->mMeshes[meshIndex]->mBones[boneIdx]; //For every bone in the model
+				GLfloat boneID = skeleton->GetBone(bone->mName.C_Str())->id;
 
 				for (int j = 0; j < (int)bone->mNumWeights; j++) //loop through its weights
 				{
-					aiVertexWeight weight = bone->mWeights[j];
+					int vertID = meshEntries[meshIndex].BaseVertex + bone->mWeights[j].mVertexId;
+					float weight = bone->mWeights[j].mWeight;
 
-					int vertID = meshEntries[meshIndex].BaseVertex + weight.mVertexId; //the vertex id + offset 
-				
-					for(int k = 0; k < 4; k++)
+					for(int k = 0; k < NUM_WEIGHTS_PER_VERTEX; k++)
 					{
-						if(weightAmounts[vertID][k] == 0.0f)
+						if(vertexWeights[vertID].weights[k] == 0.0f)
 						{
-							GLfloat id = skeleton->GetBone(bone->mName.C_Str())->id;
+							
+							string name = bone->mName.C_Str();
+							vertexWeights[vertID].boneIDs[k] = boneID;
+							vertexWeights[vertID].weights[k] = weight;
+							break; //made breakpoints here
+							//they seem to be the same
 
-							boneIDs[vertID][k] = id;
-							weightAmounts[vertID][k] = weight.mWeight;
+							//debug << "VERTEX ID: " << vertID;
+							//debug.str(std::string());
+						//ooopsie :P haha
+							//ok it's not here the problem
+							//have a look around, i'ma make tea
+							//cool could you bring one more cup for me?
+
 						}
 					}
 				}
 			}
 		}
+
+		glBindBuffer(GL_ARRAY_BUFFER, buffers[WEIGHT_VB]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertexWeights[0]) * vertexWeights.size(), &vertexWeights[0], GL_STATIC_DRAW);
 		
+		glEnableVertexAttribArray(3);
+		glVertexAttribIPointer(3, 4, GL_INT, sizeof(VertexWeight), (const GLvoid*)0);
 
-		glBindBuffer (GL_ARRAY_BUFFER, buffers[BONE_VB]);
-		glBufferData (GL_ARRAY_BUFFER, 4 * vertexCount * sizeof (GLfloat), &boneIDs[0], GL_STATIC_DRAW);
-		glVertexAttribPointer (BONE_VB, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-		glEnableVertexAttribArray (BONE_VB);
-
-		glBindBuffer (GL_ARRAY_BUFFER, buffers[WEIGHT_VB]);
-		glBufferData (GL_ARRAY_BUFFER, 4 * vertexCount * sizeof (GLfloat), &weightAmounts[0], GL_STATIC_DRAW);
-		glVertexAttribPointer (WEIGHT_VB, 4, GL_FLOAT, GL_FALSE, 0, NULL);
-		glEnableVertexAttribArray (WEIGHT_VB);
+		glEnableVertexAttribArray(4);    
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(VertexWeight), (const GLvoid*)offsetof(VertexWeight, weights)); 
 	}
 
 	aiReleaseImport (scene);
@@ -339,7 +339,7 @@ GLuint Model::LoadTexture(const char* fileName)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   
 	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 			
-	glBindTexture(GL_TEXTURE_2D, 0); //unbind
+	glBindTexture(GL_TEXTURE_2D, 0); //unbind try now without animation and see if there is that initial error
 
 	delete image;  
 	return textureID;

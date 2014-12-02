@@ -35,7 +35,7 @@ class Skeleton
 		double animationDuration;
 		double animationTimer;
 
-		float animationSpeedScalar; //TODO - use
+		float animationSpeedScalar; //TODO - make static
 
 		std::vector<std::string> bonesAdded;
 

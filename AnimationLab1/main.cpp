@@ -122,6 +122,7 @@ int main(int argc, char** argv)
 	glutIdleFunc (update);
 
 	// A call to glewInit() must be done after glut is initialized!
+	glewExperimental = GL_TRUE;
     GLenum res = glewInit();
 	
 	#pragma region ERROR CHECKING
@@ -159,8 +160,8 @@ int main(int argc, char** argv)
 	q *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
 	q *= glm::angleAxis(0.0f, glm::vec3(0,0,1));
 
-	objectList.push_back(new Model(glm::vec3(0,0,5), glm::toMat4(q), glm::vec3(1), "Models/DarMaul_LowPoly.dae", shaderManager.GetShaderProgramID("skinned")));
-	//objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Models/sora.dae");
+	objectList.push_back(new Model(glm::vec3(0,0,5), glm::toMat4(q), glm::vec3(1), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); //what
+	objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Models/sora.dae");
 	
 	#pragma region IK Stuff
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
@@ -295,14 +296,12 @@ void draw()
 
 		//Set MVP matrix
 		glm::mat4 MVP = projectionMatrix * viewMatrix * objectList.at(i)->GetModelMatrix();
-		int mvpMatrixLocation = glGetUniformLocation(objectList[i]->GetShaderProgramID(), "mvpMatrix"); // Get the location of our mvp matrix in the shader
-		glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP/*&MVP[0][0]*/)); // Send our model/view/projection matrix to the shader
+		int mvpMatrixLocation = glGetUniformLocation(objectList[i]->GetShaderProgramID(), "mvpMatrix"); // Get the location of mvp matrix in the shader
+		glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP)); // Send updated mvp matrix 
 		
 		//Set Bone matrices
 		if(objectList[i]->HasSkeleton())
 		{
-			int numBones = objectList[i]->GetSkeleton()->GetBones().size();
-
 			glm::mat4 boneMatrices[MAX_BONES];
 			int boneMatricesAttribLocations[MAX_BONES]; //INVESTIGATE - does this really need to be done every frame?
 
@@ -311,19 +310,20 @@ void draw()
 
 			objectList[i]->GetSkeleton()->UpdateGlobalTransforms(objectList[i]->GetSkeleton()->GetRootBone(), glm::mat4());
 
+			int numBones = objectList[i]->GetSkeleton()->GetBones().size();
 			for(int boneidx = 0; boneidx < numBones; boneidx++)
 			{
 				Bone* bone = objectList[i]->GetSkeleton()->GetBone(boneidx);
-				boneMatrices[int(bone->id)] = bone->finalTransform;
+				boneMatrices[bone->id] = bone->finalTransform;
 			}
 
 			//Send up-to-date bone matrix data to the shader 
-			for(int j = 0; j < MAX_BONES/*numBones?*/; j++)
+			for(int j = 0; j < MAX_BONES; j++)
 			{
 				stringstream ss;
 				ss << "boneMatrices[" << j << "]";
-				boneMatricesAttribLocations[j] = glGetUniformLocation (objectList[i]->GetShaderProgramID(), ss.str().c_str());
-				glUniformMatrix4fv (boneMatricesAttribLocations[j], numBones, GL_FALSE, glm::value_ptr(boneMatrices[j])/*&boneMatrices[j][0][0]*/);
+				boneMatricesAttribLocations[j] = glGetUniformLocation (objectList[i]->GetShaderProgramID(), ss.str().c_str()); //Get location of bone matrix in shader
+				glUniformMatrix4fv (boneMatricesAttribLocations[j], numBones, GL_FALSE, glm::value_ptr(boneMatrices[j])); //send updated matrix
 			}
 		}
 

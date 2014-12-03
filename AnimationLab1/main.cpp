@@ -40,6 +40,7 @@ void passiveMouseMotion(int x, int y);
 void mouseButton(int button, int state, int x, int y);
 void handleSpecialKeypress(int key, int x, int y);
 void handleSpecialKeyReleased(int key, int x, int y);
+void mouseWheel(int, int, int, int);
 
 void reshape(int w, int h);
 void update();
@@ -113,6 +114,7 @@ int main(int argc, char** argv)
 	glutSpecialFunc(handleSpecialKeypress);
 	glutSpecialUpFunc(handleSpecialKeyReleased);
 	glutMouseFunc (mouseButton);
+	glutMouseWheelFunc(mouseWheel);
 	//glutMotionFunc (MouseMotion);
 	glutPassiveMotionFunc(passiveMouseMotion);
 	glutIdleFunc (update);
@@ -139,10 +141,7 @@ int main(int argc, char** argv)
 	projectionMatrix = glm::perspective(60.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f /*near plane*/, 100.f /*far plane*/); // Create our perspective projection matrix
 
 	//TODO - constructor for camera
-	camera.Init(0.0002f, 0.005f); 
-	camera.viewProperties.position = glm::vec3(0.0f, 0.0f, 0.0f);
-	//camera.viewProperties.forward = glm::vec3(0.f, 0.f, -10.f); //horizontal and vertical control this
-	camera.viewProperties.up = glm::vec3(0.0f, 1.0f, 0.0f);
+	camera.Init(glm::vec3(0.0f, 0.0f, 0.0f), 0.0002f, 0.005f); 
 
 	shaderManager.Init();
 
@@ -153,14 +152,14 @@ int main(int argc, char** argv)
 	Node::objectList = &objectList;
 
 	glm::quat correctBlender = glm::quat();
-	//correctBlender *= glm::angleAxis(180.0f, glm::vec3(1,0,0));
-	//correctBlender *= glm::angleAxis(90.0f, glm::vec3(0,1,0));
-	//correctBlender *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
+	correctBlender *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
+	//correctBlender *= glm::angleAxis(180.0f, glm::vec3(0,1,0));
+	correctBlender *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
 	
-	objectList.push_back(new Model(glm::vec3(0,0,10), glm::toMat4(correctBlender), glm::vec3(1), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
-	objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Models/sora.dae");
-	objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Animations/fight.dae");
-	objectList[objectList.size()-1]->GetSkeleton()->SetAnimation(1);
+	objectList.push_back(new Model(glm::vec3(0,0,0), glm::toMat4(correctBlender), glm::vec3(1), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
+	//objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Models/sora.dae");
+	//objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Animations/fight.dae");
+	//objectList[objectList.size()-1]->GetSkeleton()->SetAnimation(1);
 
 	#pragma region IK Stuff
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
@@ -287,7 +286,7 @@ void draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-	glm::mat4 viewMatrix = glm::lookAt(camera.viewProperties.position, camera.viewProperties.position + camera.viewProperties.forward, camera.viewProperties.up); 
+	glm::mat4 viewMatrix = camera.GetViewMatrix();
 
 	for(int i = 0; i < objectList.size(); i++)
 	{
@@ -443,7 +442,8 @@ void passiveMouseMotion(int x, int y)
 			return;
 		}
 
-		camera.ProcessMouse(x, y, deltaTime, WINDOW_WIDTH, WINDOW_HEIGHT);
+		camera.MouseRotate(x, y, WINDOW_WIDTH, WINDOW_HEIGHT); 
+		camera.Update(deltaTime);
 
 		glutWarpPointer(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 		just_warped = true;
@@ -461,6 +461,14 @@ void mouseButton(int button, int state, int x, int y)
 			}
 			break;
     }
+}
+
+void mouseWheel(int button, int dir, int x, int y)
+{
+	if (dir > 0)
+		camera.Zoom(-deltaTime);
+    else
+		camera.Zoom(deltaTime);
 }
 
 //DIRECTIONAL KEYS DOWN

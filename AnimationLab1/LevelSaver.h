@@ -24,6 +24,10 @@ class LevelSaver // This class serialise the level / loads the level and creates
 		{
 			for(int i = 0; i < objects.size(); i++)
 			{
+				outfile << objects[i]->GetFileName() << "\n";
+
+				outfile << ShaderManager::Instance->GetShaderProgramName(objects[i]->GetShaderProgramID());
+
 				WorldProperties wp = objects[i]->worldProperties;
 
 				outfile << wp.translation.x << "\n";
@@ -38,10 +42,6 @@ class LevelSaver // This class serialise the level / loads the level and creates
 				outfile << q[3] << "\n";
 
 				outfile << wp.scale.x << "\n";
-
-				outfile << objects[i]->GetFileName() << "\n";
-
-				outfile << ShaderManager::Instance->GetShaderProgramName(objects[i]->GetShaderProgramID());
 
 				if(i != objects.size()-1)
 					outfile << "\n";
@@ -63,6 +63,12 @@ class LevelSaver // This class serialise the level / loads the level and creates
 
 		while (infile.good()) 
 		{   
+			string fileName;
+			getline(infile, fileName);
+
+			string shaderName;
+			getline(infile, shaderName);
+
 			glm::vec3 translation = glm::vec3();
 			for(int i = 0; i < 3; i++)
 			{
@@ -83,12 +89,6 @@ class LevelSaver // This class serialise the level / loads the level and creates
 			getline(infile, scaleStr);
 
 			float scale = std::stof(scaleStr);
-
-			string fileName;
-			getline(infile, fileName);
-
-			string shaderName;
-			getline(infile, shaderName);
 
 			objects.push_back(new Model(translation, glm::toMat4(orientation), glm::vec3(scale), fileName.c_str(), ShaderManager::Instance->GetShaderProgramID(shaderName)));
 		}

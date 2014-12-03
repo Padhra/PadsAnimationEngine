@@ -1,3 +1,15 @@
+Models/sora.dae
+skinned
+0
+0
+0
+3.09086e-008
+0.707107
+0.707107
+-3.09086e-008
+1
+Models/arenaplanet.dae
+diffuse
 0
 0
 10
@@ -6,7 +18,7 @@
 0
 1
 0.005
-Models/arenaplanet.dae
+Models/jumbo.dae
 diffuse
 0
 0
@@ -36,5 +48,3 @@ diffuse
 6.18172e-008
 0.707107
 0.0001
-Models/jumbo.dae
-diffuse

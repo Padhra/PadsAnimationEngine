@@ -178,7 +178,7 @@ void Skeleton::Animate(double deltaTime)
 
 			translation = glm::translate(glm::mat4(1), lerp(bones[boneidx]->animations[animationIndex].posKeyframes[prev_key]->position, 
 				bones[boneidx]->animations[animationIndex].posKeyframes[next_key]->position, t));
-			//translation = glm::translate(glm::mat4(1), bones[boneidx]->posKeyframes[prev_key]->position);
+			//translation = glm::translate(glm::mat4(1), bones[boneidx]->posKeyframes[prev_key]->position); //TODO - add mode
 		}
 
 		if (bones[boneidx]->animations[animationIndex].rotKeyframes.size() > 0)  // if this bone has keyframes
@@ -203,6 +203,13 @@ void Skeleton::Animate(double deltaTime)
 				bones[boneidx]->animations[animationIndex].rotKeyframes[next_key]->rotation, t);
 			orientation = glm::toMat4(interpolatedquat);
 			//orientation = glm::toMat4(bones[boneidx]->rotKeyframes[prev_key]->rotation);
+
+			//xzspeed = 3
+				
+				//0 <-> 3
+				//2 <-> 5
+
+			//finalOrientation = orientation1 * w1 + orientation2 * w2;
 		}
 
 		bones[boneidx]->transform = translation * orientation; 

@@ -89,7 +89,9 @@ class Model
 		
 	public:
 		
-		Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint shaderProgramID);
+		bool serialise;
+
+		Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint shaderProgramID, bool serialise = true);
 		~Model();
 
 		WorldProperties worldProperties;

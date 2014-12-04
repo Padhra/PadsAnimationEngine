@@ -1,6 +1,6 @@
 #include "Model.h"
 
-Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint p_shaderProgramID)
+Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint p_shaderProgramID, bool serialise)
 {
 	hasSkeleton = false;
 
@@ -16,6 +16,8 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 	fileName = file_name;
 
 	shaderProgramID = p_shaderProgramID;
+
+	this->serialise = serialise;
 }
 
 Model::~Model()

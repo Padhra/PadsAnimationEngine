@@ -37,6 +37,9 @@
     <Filter Include="Header Files\Player">
       <UniqueIdentifier>{d014a99d-754f-4468-83ce-e8cae14098e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Player">
+      <UniqueIdentifier>{ca217b5a-4685-4aa7-b405-934e82500037}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -60,11 +63,17 @@
     <ClCompile Include="Model.cpp">
       <Filter>Source Files\Model</Filter>
     </ClCompile>
+    <ClCompile Include="Spline.cpp">
+      <Filter>Source Files\Spline</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Source Files\Player</Filter>
+    </ClCompile>
     <ClCompile Include="Node.cpp">
       <Filter>Source Files\Spline</Filter>
     </ClCompile>
-    <ClCompile Include="Spline.cpp">
-      <Filter>Source Files\Spline</Filter>
+    <ClCompile Include="Gamepad.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -114,6 +123,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Keys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Gamepad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,6 +4,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm\gtx\quaternion.hpp>
 
 #include <assimp/Importer.hpp>
 #include <assimp/cimport.h> // C importer
@@ -18,6 +20,7 @@
 #include "Spline.h"
 #include "Node.h"
 #include "LevelSaver.h"
+#include "Player.h"
 
 #include "Common.h"
 
@@ -31,6 +34,8 @@
 #include <vector>
 #include <list>
 
+#include <xinput.h>
+
 using namespace std;
 
 //Callbacks
@@ -41,6 +46,7 @@ void mouseButton(int button, int state, int x, int y);
 void handleSpecialKeypress(int key, int x, int y);
 void handleSpecialKeyReleased(int key, int x, int y);
 void mouseWheel(int, int, int, int);
+void gamepad(unsigned int buttonMask, int x, int y, int z);
 
 void reshape(int w, int h);
 void update();
@@ -73,6 +79,8 @@ ShaderManager shaderManager;
 vector<Model*> objectList;
 LevelSaver levelSaver;
 
+Player* player;
+
 Model* target;
 float targetSpeed = 0.01f;
 
@@ -101,7 +109,7 @@ int main(int argc, char** argv)
     glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition (100, 100); 
-    glutCreateWindow("Final Fantasy X - Freemium Edition");
+    glutCreateWindow("KH 0.5 Remix");
 
 	glutSetCursor(GLUT_CURSOR_NONE);
 	
@@ -118,6 +126,8 @@ int main(int argc, char** argv)
 	//glutMotionFunc (MouseMotion);
 	glutPassiveMotionFunc(passiveMouseMotion);
 	glutIdleFunc (update);
+	glutJoystickFunc(gamepad, 300);
+	glutForceJoystickFunc();
 
 	// A call to glewInit() must be done after glut is initialized!
 	glewExperimental = GL_TRUE;
@@ -148,16 +158,21 @@ int main(int argc, char** argv)
 	shaderManager.CreateShaderProgram("skinned", "Shaders/skinned.vs", "Shaders/skinned.ps");
 	shaderManager.CreateShaderProgram("diffuse", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
 
-	//TODO - make this nicer
 	Node::objectList = &objectList;
 
 	glm::quat correctBlender = glm::quat();
 	correctBlender *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
 	//correctBlender *= glm::angleAxis(180.0f, glm::vec3(0,1,0));
-	correctBlender *= glm::angleAxis(180.0f, glm::vec3(0,0,1));
+	correctBlender *= glm::angleAxis(-90.0f, glm::vec3(0,0,1));
+
+	vector<Model*> loadedObjects = levelSaver.Load();
+	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
-	objectList.push_back(new Model(glm::vec3(0,0,0), glm::toMat4(correctBlender), glm::vec3(1), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
-	//objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Models/sora.dae");
+	player = new Player(objectList, &camera, new Model(glm::vec3(0,0,0), glm::toMat4(correctBlender), glm::vec3(1), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
+	player->LoadAnimation("Models/sora.dae"); 
+
+	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/arenaplanet.dae", shaderManager.GetShaderProgramID("diffuse")));
+
 	//objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Animations/fight.dae");
 	//objectList[objectList.size()-1]->GetSkeleton()->SetAnimation(1);
 
@@ -229,6 +244,8 @@ void update()
 		fps = frames;
 		frames = frameCounterTime = 0;
 	}
+
+	camera.Update(deltaTime);
 
 	//Animation
 	for(int i = 0; i< objectList.size(); i++)
@@ -355,6 +372,9 @@ void keyPressed (unsigned char key, int x, int y)
 {  
 	keyStates[key] = true; // Set the state of the current key to pressed  
 
+	camera.ProcessKeyboardOnce(key, x, y);
+	player->ProcessKeyboardOnce(key, x, y);
+
 	if(key == 32) //Spacebar
 		//altDirectional = !altDirectional;
 		levelSaver.Save(objectList);
@@ -365,53 +385,52 @@ void keyPressed (unsigned char key, int x, int y)
 		objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	}
 
-
 	#pragma region SPLINE EDITOR
-	//if(key == 'o')
-		//targetPath.Save(selectedFile);
-	if(key == 'l')
-	{
-		int size = targetPath.nodes.size();
-		for(int i = 0; i < size; i++)
-		{
-			Node* node = *(targetPath.nodes.begin());
-			objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
-			targetPath.DeleteNode(node);
-		}
+	////if(key == 'o')
+	//	//targetPath.Save(selectedFile);
+	//if(key == 'l')
+	//{
+	//	int size = targetPath.nodes.size();
+	//	for(int i = 0; i < size; i++)
+	//	{
+	//		Node* node = *(targetPath.nodes.begin());
+	//		objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
+	//		targetPath.DeleteNode(node);
+	//	}
 
-		targetPath.Load(selectedFile);
-	}
-	if(key == 'p')
-		targetPath.AddNode(new Node(glm::vec3(0,0,0)));
-	if(key == 't')
-		if (uiMode != UIMode::targetMove)
-			uiMode = UIMode::targetMove;
-		else
-			uiMode = -1;
-	if(key == 'n')
-		uiMode = UIMode::nodeSelect;
-	if(key == 'm')
-		uiMode = UIMode::nodeMove;
-	if(key == 'i')
-		if(targetPath.mode == InterpolationMode::Cubic)
-			targetPath.SetMode(InterpolationMode::Linear);
-		else
-			targetPath.SetMode(InterpolationMode::Cubic);
-	if(key == 'j')
-	{
-		if(targetPath.nodes.size() > 0)
-		{
-			Node* node = targetPath.nodes[selectedTarget % targetPath.nodes.size()];
-			objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
-			targetPath.DeleteNode(node);
-		}
-	}
-	if(key == 'c')
-		Skeleton::ConstraintsEnabled = !Skeleton::ConstraintsEnabled;
-	if(key == 'u')
-		uiMode = UIMode::splineSpeed;
-	if(key == 'h')
-		uiMode = UIMode::fileSelect;
+	//	targetPath.Load(selectedFile);
+	//}
+	//if(key == 'p')
+	//	targetPath.AddNode(new Node(glm::vec3(0,0,0)));
+	//if(key == 't')
+	//	if (uiMode != UIMode::targetMove)
+	//		uiMode = UIMode::targetMove;
+	//	else
+	//		uiMode = -1;
+	//if(key == 'n')
+	//	uiMode = UIMode::nodeSelect;
+	//if(key == 'm')
+	//	uiMode = UIMode::nodeMove;
+	//if(key == 'i')
+	//	if(targetPath.mode == InterpolationMode::Cubic)
+	//		targetPath.SetMode(InterpolationMode::Linear);
+	//	else
+	//		targetPath.SetMode(InterpolationMode::Cubic);
+	//if(key == 'j')
+	//{
+	//	if(targetPath.nodes.size() > 0)
+	//	{
+	//		Node* node = targetPath.nodes[selectedTarget % targetPath.nodes.size()];
+	//		objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
+	//		targetPath.DeleteNode(node);
+	//	}
+	//}
+	//if(key == 'c')
+	//	Skeleton::ConstraintsEnabled = !Skeleton::ConstraintsEnabled;
+	//if(key == 'u')
+	//	uiMode = UIMode::splineSpeed;
+	//if(key == 'h')
+	//	uiMode = UIMode::fileSelect;
 	#pragma endregion
 
 	#pragma region SKELETAL EDITOR
@@ -442,8 +461,7 @@ void passiveMouseMotion(int x, int y)
 			return;
 		}
 
-		camera.MouseRotate(x, y, WINDOW_WIDTH, WINDOW_HEIGHT); 
-		camera.Update(deltaTime);
+		camera.MouseRotate(x, y, WINDOW_WIDTH, WINDOW_HEIGHT, deltaTime); 
 
 		glutWarpPointer(WINDOW_WIDTH/2, WINDOW_HEIGHT/2);
 		just_warped = true;
@@ -469,6 +487,26 @@ void mouseWheel(int button, int dir, int x, int y)
 		camera.Zoom(-deltaTime);
     else
 		camera.Zoom(deltaTime);
+}
+
+int xx, xy, xz;
+
+void  gamepad (unsigned int buttonMask, int x, int y, int z)
+{
+	if(buttonMask & GLUT_JOYSTICK_BUTTON_A) {
+    printf("button A is pressed ");
+	}
+	if(buttonMask & GLUT_JOYSTICK_BUTTON_B) {
+		printf("button B is pressed ");
+	}
+	if(buttonMask & GLUT_JOYSTICK_BUTTON_C) {
+		printf("button C is pressed ");
+	}
+	if(buttonMask & GLUT_JOYSTICK_BUTTON_D) {
+		printf("button D is pressed ");
+	}
+
+	//x, y left analog stick. deadzone 200
 }
 
 //DIRECTIONAL KEYS DOWN
@@ -568,21 +606,8 @@ void processContinuousInput()
 	}
 	//exit(0);
 
-	//TODO
-	//camera.processKeyboard(keyStates);
-	
-	if(keyStates['w'])
-		camera.viewProperties.position += camera.viewProperties.forward * float(deltaTime) * camera.moveSpeed; 
-	if(keyStates['s'])
-		camera.viewProperties.position -= camera.viewProperties.forward  * float(deltaTime) * camera.moveSpeed; 
-	if(keyStates['a'])
-		camera.viewProperties.position -= glm::cross(camera.viewProperties.forward, camera.viewProperties.up) * float(deltaTime) * camera.moveSpeed;
-	if(keyStates['d'])
-		camera.viewProperties.position += glm::cross(camera.viewProperties.forward, camera.viewProperties.up) * float(deltaTime) * camera.moveSpeed;
-	if(keyStates['q'])
-		camera.viewProperties.position -= camera.viewProperties.up * float(deltaTime) * camera.moveSpeed; 
-	if(keyStates['e'])
-		camera.viewProperties.position += camera.viewProperties.up * float(deltaTime) * camera.moveSpeed; 
+	camera.ProcessKeyboardContinuous(keyStates, deltaTime);
+	player->ProcessKeyboardContinuous(keyStates, deltaTime);
 
 	#pragma region OLD TARGET MOVE CODE
 	/*if(uiMode == UIMode::targetMove)
@@ -622,6 +647,8 @@ void processContinuousInput()
 void printouts()
 {
 	std::stringstream ss;
+
+	glColor3f(1,1,1);
 
 	//Bottom left is 0,0
 
@@ -663,6 +690,17 @@ void printouts()
 	ss << fps << " fps ";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-60, ss.str().c_str());
 
+	//ss.str(std::string()); // clear
+	//ss << xx << " xx ";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-80, ss.str().c_str());
+
+	//ss.str(std::string()); // clear
+	//ss << xy << " xy ";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-100, ss.str().c_str());
+
+	//ss.str(std::string()); // clear
+	//ss << xz << " xz ";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-120, ss.str().c_str());
 
 	ss.str(std::string()); // clear
 	if(Skeleton::ConstraintsEnabled)
@@ -767,6 +805,17 @@ void printouts()
 	ss.str(std::string()); // clear
 	ss << "camera.up: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.up.x << ", " << camera.viewProperties.up.y << ", " << camera.viewProperties.up.z << ")";
 	drawText(20,WINDOW_HEIGHT-60, ss.str().c_str());
+
+	//PRINT PLAYER
+	ss.str(std::string()); // clear
+	ss << "player.pos: (" << std::fixed << std::setprecision(PRECISION) << player->model->worldProperties.translation.x << ", " << player->model->worldProperties.translation.y 
+		<< ", " << player->model->worldProperties.translation.z << ")";
+	drawText(20,WINDOW_HEIGHT-80, ss.str().c_str());
+
+	glm::vec3 euler = glm::eulerAngles(glm::toQuat(player->model->worldProperties.orientation));
+	ss.str(std::string()); // clear
+	ss << "player.rot: (" << std::fixed << std::setprecision(PRECISION) << euler.x << ", " << euler.y << ", " << euler.z << ")";
+	drawText(20,WINDOW_HEIGHT-100, ss.str().c_str());
 
 	//PRINT BONES
  //   for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)

@@ -19,32 +19,37 @@ class LevelSaver // This class serialise the level / loads the level and creates
 		std::stringstream ss;
 		ss << "Levels/level" /*<< selectedFile */ << ".txt";
 		ofstream outfile (ss.str());
+
+		bool firstEntry = true;
 		
 		if (outfile.is_open())
 		{
 			for(int i = 0; i < objects.size(); i++)
 			{
-				outfile << objects[i]->GetFileName() << "\n";
+				if(objects[i]->serialise == true)
+				{
+					if(!firstEntry)
+						outfile << "\n";
 
-				outfile << ShaderManager::Instance->GetShaderProgramName(objects[i]->GetShaderProgramID());
+					outfile << objects[i]->GetFileName() << "\n";
 
-				WorldProperties wp = objects[i]->worldProperties;
+					outfile << ShaderManager::Instance->GetShaderProgramName(objects[i]->GetShaderProgramID()) << "\n";
 
-				outfile << wp.translation.x << "\n";
-				outfile << wp.translation.y << "\n";
-				outfile << wp.translation.z << "\n";
+					WorldProperties wp = objects[i]->worldProperties;
+
+					outfile << wp.translation.x << "\n";
+					outfile << wp.translation.y << "\n";
+					outfile << wp.translation.z << "\n";
 				
-				glm::quat q = glm::toQuat(wp.orientation);
+					glm::quat q = glm::toQuat(wp.orientation);
 
-				outfile << q[0] << "\n";
-				outfile << q[1] << "\n";
-				outfile << q[2] << "\n";
-				outfile << q[3] << "\n";
+					outfile << q[0] << "\n";
+					outfile << q[1] << "\n";
+					outfile << q[2] << "\n";
+					outfile << q[3] << "\n";
 
-				outfile << wp.scale.x << "\n";
-
-				if(i != objects.size()-1)
-					outfile << "\n";
+					outfile << wp.scale.x;
+				}
 			}
 
 			outfile.close();

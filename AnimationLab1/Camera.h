@@ -12,6 +12,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "Keys.h"
+
 struct ViewProperties 
 {
 	glm::vec3 position;
@@ -48,8 +50,10 @@ class Camera
 
 		//float yMaxLimit; //= -40f
 		//float yMinLimit; //=70f
+
+		float targetYOffset;
 		
-		void Init(glm::vec3 position, float p_turnSpeed = 0.005f, float p_moveSpeed = 0.01f, bool p_flycam = false ) 
+		void Init(glm::vec3 position, float p_turnSpeed = 0.005f, float p_moveSpeed = 0.01f, bool p_flycam = true ) 
 		{ 
 			viewProperties.position = position;
 			viewProperties.up = glm::vec3(0,1,0);
@@ -65,36 +69,39 @@ class Camera
 
 			scrollWheelSensivity = 0.15f;
 
-			target = glm::vec3(0,1,0);
+			target = glm::vec3(0,0,0);
 		}
 
-		void MouseRotate(int x, int y, int p_winw, int p_winh)
+		void MouseRotate(int x, int y, int p_winw, int p_winh, int deltaTime)
 		{
 			inputX = x;
 			inputY = y;
 
-			//if third person cam clamp angle
+			//TODO - if third person cam clamp angle
 
 			winh = p_winh;
 			winw = p_winw;
+
+			horizontalXZAngle += turnSpeed * deltaTime * float(winw/2 - inputX);
+			verticalAngle += turnSpeed * deltaTime * float(winh/2 - inputY);
 		}
 
 		void Zoom(GLfloat amount)
 		{
-			distance += (amount * scrollWheelSensivity);
-			distance = glm::clamp(distance, minDistance, maxDistance);
+			if(!flycam)
+			{
+				distance += (amount * scrollWheelSensivity);
+				distance = glm::clamp(distance, minDistance, maxDistance);
+			}
 		}
 
 		void SetTarget(glm::vec3 p_target)
 		{
-			target = p_target;
+			target = p_target + targetYOffset;
 		}
 
 		void Update(int deltaTime)
 		{
-			horizontalXZAngle += turnSpeed * deltaTime * float(winw/2 - inputX);
-			verticalAngle += turnSpeed * deltaTime * float(winh/2 - inputY);
-
 			if(flycam)
 			{
 				viewProperties.forward = glm::vec3(cos(verticalAngle) * sin(horizontalXZAngle),
@@ -110,8 +117,8 @@ class Camera
 
 				glm::vec3 right = glm::vec3(sin(horizontalXZAngle - 3.14f/2.0f), 0, cos(horizontalXZAngle - 3.14f/2.0f));
 				
-				glm::quat rotation = glm::quat(glm::vec3(0, -horizontalXZAngle, 0)); //yaw, pitch
-				rotation *= glm::angleAxis(-verticalAngle * 100, right);
+				glm::quat rotation = glm::quat(glm::vec3(0, -horizontalXZAngle, 0)); //yaw
+				rotation *= glm::angleAxis(-verticalAngle * 100, right); //pitch
 
 				//xz rotation is around y axis
 				//y rotation is around arbitary axis
@@ -131,6 +138,32 @@ class Camera
 				//upVector        // probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down, which can be great too
 			//);
 		}
+
+		void ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
+		{
+			if(flycam)
+			{
+				if(keyStates[KEY::KEY_w] || keyStates[KEY::KEY_W])
+					viewProperties.position += viewProperties.forward * float(deltaTime) * moveSpeed; 
+				if(keyStates[KEY::KEY_s] || keyStates[KEY::KEY_S])
+					viewProperties.position -= viewProperties.forward  * float(deltaTime) * moveSpeed; 
+				if(keyStates[KEY::KEY_a] || keyStates[KEY::KEY_A])
+					viewProperties.position -= glm::cross(viewProperties.forward, viewProperties.up) * float(deltaTime) * moveSpeed;
+				if(keyStates[KEY::KEY_d] || keyStates[KEY::KEY_D])
+					viewProperties.position += glm::cross(viewProperties.forward, viewProperties.up) * float(deltaTime) * moveSpeed;
+				if(keyStates[KEY::KEY_q] || keyStates[KEY::KEY_Q])
+					viewProperties.position -= viewProperties.up * float(deltaTime) * moveSpeed; 
+				if(keyStates[KEY::KEY_e] || keyStates[KEY::KEY_E])
+					viewProperties.position += viewProperties.up * float(deltaTime) * moveSpeed; 
+			}
+		}
+
+		void ProcessKeyboardOnce(unsigned char key, int x, int y)
+		{
+			if (key == KEY::KEY_0)
+				flycam = !flycam;
+		}
+
 };
 
 #endif

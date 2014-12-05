@@ -71,6 +71,8 @@ class Bone
 
 		DOFLimits dofLimits;
 
+		bool applyKeyframeFlag;
+
 		glm::vec3 GetMeshSpacePosition() 
 		{
 			glm::mat4 matAbs = finalTransform * inv_offset; 

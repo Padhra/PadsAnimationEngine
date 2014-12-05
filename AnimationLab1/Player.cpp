@@ -33,6 +33,17 @@ void Player::ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
 void Player::ProcessKeyboardOnce(unsigned char key, int x, int y)
 {
 	//Animation one shots
+
+	if(key == KEY::KEY_k)
+		model->GetSkeleton()->SetAnimationImmediate(0);
+
+	if(key == KEY::KEY_j)
+		model->GetSkeleton()->SetAnimationGradual(1, 50);
+}
+
+void Player::Update(double deltaTime)
+{
+
 }
 
 void Player::Move(double deltaTime)

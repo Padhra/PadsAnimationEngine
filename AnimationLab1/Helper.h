@@ -12,6 +12,7 @@
 glm::mat4 convertAssimpMatrix (aiMatrix4x4 m);
 glm::quat formQuaternion(double x, double y, double z, double angle);
 glm::vec3 lerp(glm::vec3 v0, glm::vec3 v1, float t);
+float lerp(float w0, float w1, float t);
 glm::vec3 cubicLerp(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, float t);
 //betterLerp(v0,v1,t) { return (1-t)*v0 + t*v1; }
 void drawText(int x, int y, const char *st);

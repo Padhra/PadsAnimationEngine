@@ -8,7 +8,7 @@ float Skeleton::AnimationSpeedScalar = 1.0f;
 
 Skeleton::Skeleton(Model* p_myModel)
 {
-	animationIndex = 0;
+	currentAnimationIndex = -1;
 
 	hasKeyframes = false;
 
@@ -73,6 +73,8 @@ bool Skeleton::ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, B
 					bone->transform = convertAssimpMatrix(aiBone->mTransformation);
 
 					root = bone->parent; //The last guy to get in here is the root, as it is depth first
+
+					bone->applyKeyframeFlag = false;
 
 					#pragma region PRINT OUT
 					if(print)
@@ -140,81 +142,92 @@ void Skeleton::Animate(double deltaTime)
 	if(!hasKeyframes)
 		return;
 
-	Animation* animation = animations[animationIndex];
+	if(blender.active)
+		blender.Blend(deltaTime);
 
-	animation->animationTimer += deltaTime/1000;
-
-	if (animation->animationTimer >= animation->duration) 
-		animation->animationTimer = 0.0;
-
-	for(int boneidx = 0; boneidx < animation->boneAnimations.size(); boneidx++)
+	for(int aniIdx = 0; aniIdx < animations.size(); aniIdx++)
 	{
-		glm::mat4 translation = glm::mat4(1);
-		glm::mat4 orientation = glm::mat4(1);
+		Animation* animation = animations[aniIdx];
 
-		BoneAnimation* boneAnimation = animation->boneAnimations.at(boneidx);
+		if(!animation->frozen)
+			animation->localClock += deltaTime/1000;
 
-		if(boneAnimation->posKeyframes.size() > 0)// if this bone has keyframes
+		if (animation->localClock >= animation->duration) 
+			animation->localClock = 0.0;
+
+		if (animation->weight > 0)
 		{
-			int prev_key = 0;
-			int next_key = 0;
-
-			//Find the two keyframes
-			for (int keyidx = 0; keyidx < boneAnimation->posKeyframes.size() - 1; keyidx++) 
+			for(int boneidx = 0; boneidx < animation->boneAnimations.size(); boneidx++)
 			{
-				prev_key = keyidx;
-				next_key = keyidx + 1;
+				glm::mat4 translation = glm::mat4(1);
+				glm::mat4 orientation = glm::mat4(1);
 
-				
-				if (boneAnimation->posKeyframes[next_key]->time >= animation->animationTimer) // if the next keyframe is greater than the timer, then we have our two keyframes
-					break;
-			}
+				BoneAnimation* boneAnimation = animation->boneAnimations.at(boneidx);
 
-			float timeBetweenKeys = boneAnimation->posKeyframes[next_key]->time - boneAnimation->posKeyframes[prev_key]->time;
-			float t = (animation->animationTimer - boneAnimation->posKeyframes[prev_key]->time) / timeBetweenKeys;
+				if(boneAnimation->posKeyframes.size() > 0)// if this bone has keyframes
+				{
+					int prev_key = 0;
+					int next_key = 0;
 
-			std::stringstream ss;
-			ss << "t: "<< t;
-			drawText(20,20, ss.str().c_str());
+					//Find the two keyframes
+					for (int keyidx = 0; keyidx < boneAnimation->posKeyframes.size() - 1; keyidx++) 
+					{
+						prev_key = keyidx;
+						next_key = keyidx + 1;
 
-			translation = glm::translate(glm::mat4(1), lerp(boneAnimation->posKeyframes[prev_key]->position, 
-				boneAnimation->posKeyframes[next_key]->position, t));
-			//translation = glm::translate(glm::mat4(1), animation.boneAnimations[boneidx].posKeyframes[prev_key]->position); //TODO - add mode
-		}
+						if (boneAnimation->posKeyframes[next_key]->time >= animation->localClock) // if the next keyframe is greater than the timer, then we have our two keyframes
+							break;
+					}
 
-		if (boneAnimation->rotKeyframes.size() > 0)  // if this bone has keyframes
-		{
-			int prev_key = 0;
-			int next_key = 0;
+					float timeBetweenKeys = boneAnimation->posKeyframes[next_key]->time - boneAnimation->posKeyframes[prev_key]->time;
+					float t = (animation->localClock - boneAnimation->posKeyframes[prev_key]->time) / timeBetweenKeys;
+
+					std::stringstream ss;
+					ss << "t: "<< t;
+					drawText(20,20, ss.str().c_str());
+
+					translation = glm::translate(glm::mat4(1), lerp(boneAnimation->posKeyframes[prev_key]->position, 
+						boneAnimation->posKeyframes[next_key]->position, t));
+					//translation = glm::translate(glm::mat4(1), animation.boneAnimations[boneidx].posKeyframes[prev_key]->position); //TODO - add mode
+				}
+
+				if (boneAnimation->rotKeyframes.size() > 0)  // if this bone has keyframes
+				{
+					int prev_key = 0;
+					int next_key = 0;
 		
-			//Find the two keyframes
-			for (int keyidx = 0; keyidx < boneAnimation->rotKeyframes.size() - 1; keyidx++) 
-			{
-				prev_key = keyidx;
-				next_key = keyidx + 1;
+					//Find the two keyframes
+					for (int keyidx = 0; keyidx < boneAnimation->rotKeyframes.size() - 1; keyidx++) 
+					{
+						prev_key = keyidx;
+						next_key = keyidx + 1;
 
-				if (boneAnimation->rotKeyframes[next_key]->time >= animation->animationTimer) // if the next keyframe is greater than the timer, then we have our two keyframes
-					break;
-			}
+						if (boneAnimation->rotKeyframes[next_key]->time >= animation->localClock) // if the next keyframe is greater than the timer, then we have our two keyframes
+							break;
+					}
 
-			float timeBetweenKeys = boneAnimation->rotKeyframes[next_key]->time - boneAnimation->rotKeyframes[prev_key]->time;
-			float t = (animation->animationTimer - boneAnimation->rotKeyframes[prev_key]->time) / timeBetweenKeys;
+					float timeBetweenKeys = boneAnimation->rotKeyframes[next_key]->time - boneAnimation->rotKeyframes[prev_key]->time;
+					float t = (animation->localClock - boneAnimation->rotKeyframes[prev_key]->time) / timeBetweenKeys;
 	
-			glm::quat interpolatedquat = glm::slerp(boneAnimation->rotKeyframes[prev_key]->rotation, 
-				boneAnimation->rotKeyframes[next_key]->rotation, t);
-			orientation = glm::toMat4(interpolatedquat);
-			//orientation = glm::toMat4(animation.boneAnimations[boneidx].rotKeyframes[prev_key]->rotation);
+					glm::quat interpolatedquat = glm::slerp(boneAnimation->rotKeyframes[prev_key]->rotation, 
+						boneAnimation->rotKeyframes[next_key]->rotation, t);
+					orientation = glm::toMat4(interpolatedquat);
+					//orientation = glm::toMat4(animation.boneAnimations[boneidx].rotKeyframes[prev_key]->rotation);
+				}
 
-			//xzspeed = 3
-				
-				//0 <-> 3
-				//2 <-> 5
+				if(bones[boneAnimation->boneID]->applyKeyframeFlag == false)
+				{
+					bones[boneAnimation->boneID]->transform = glm::mat4(1);
+					bones[boneAnimation->boneID]->applyKeyframeFlag = true;
+				}
 
-			//finalOrientation = orientation1 * w1 + orientation2 * w2;
+				bones[boneAnimation->boneID]->transform *= (translation * orientation) * animation->weight; 
+			}
 		}
-
-		bones[boneAnimation->boneID]->transform = translation * orientation; 
 	}
+
+	for(int boneIdx = 0; boneIdx < bones.size(); boneIdx++)
+		bones[boneIdx]->applyKeyframeFlag = false;
 }
 
 bool Skeleton::ComputeIK(std::string chainName, glm::vec3 T, int steps)
@@ -431,4 +444,59 @@ bool Skeleton::LoadAnimation(const char* file_name)
 
 	aiReleaseImport (scene);
 	return true;
+}
+
+void Skeleton::PrintOuts(int winw, int winh)
+{
+	int amountActive = 0;
+
+	for(int i = 0; i < animations.size(); i++)
+	{
+		if(animations[i]->weight > 0)
+		{	
+			int offset = amountActive*100 + amountActive*20;
+			amountActive++;
+
+			std::stringstream ss;
+			ss.str(std::string()); // clear
+			ss << "AnimationID: " << animations[i]->animationID; 
+			drawText(20, 100 + offset, ss.str().c_str());
+
+			ss.str(std::string()); // clear
+			ss << "Duration: " << animations[i]->duration; 
+			drawText(20, 80 + offset, ss.str().c_str());
+
+			ss.str(std::string()); // clear
+			ss << "Frozen: " << animations[i]->frozen;
+			drawText(20, 60 + offset, ss.str().c_str());
+
+			ss.str(std::string()); // clear
+			ss << "LocalTimer: " << animations[i]->localClock; 
+			drawText(20, 40 + offset, ss.str().c_str());
+
+			ss.str(std::string()); // clear
+			ss << "Weight: " << animations[i]->weight;
+			drawText(20, 20 + offset, ss.str().c_str());
+		}
+	}
+
+	if(blender.active)
+	{
+		int offset = amountActive*100 + amountActive*20;
+
+		std::stringstream ss;
+		ss.str(std::string()); // clear
+		ss << "Blend Duration: " << blender.blendDuration;
+		drawText(20, 60 + offset, ss.str().c_str());
+
+		ss.str(std::string()); // clear
+		ss << "Blend Timer: " << blender.blendTimer;
+		drawText(20, 40 + offset, ss.str().c_str());
+
+		ss.str(std::string()); // clear
+		ss << "t: " << blender.blendTimer / blender.blendDuration;
+		drawText(20, 20 + offset, ss.str().c_str());
+	}
+
+
 }

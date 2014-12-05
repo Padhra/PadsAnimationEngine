@@ -45,17 +45,98 @@ struct Animation {
 
 	int animationID;
 
-	double animationTimer;
+	double localClock;
 	double duration;
 
 	std::vector<BoneAnimation*> boneAnimations;
+
+	float weight;
+	bool frozen;
 	
 	Animation(int p_id, double p_duration)
 	{
 		animationID = p_id;
 		duration = p_duration;
 
-		animationTimer = 0.0;
+		localClock = 0.0;
+		weight = 0.0; //How much is it contributing to the pose?
+		frozen = true; //Is the clock running?
+	}
+
+	void Start()
+	{
+		localClock = 0.0;
+		weight = 1.0; 
+		frozen = false; 
+	}
+
+	void Stop()
+	{
+		localClock = 0.0;
+		weight = 0.0;
+		frozen = true; 
+	}
+};
+
+enum TransitionType { Smooth = 0, Frozen };
+
+struct WeightBlender
+{
+	bool active;
+	float blendTimer;
+	float blendDuration;
+
+	Animation* prev;
+	Animation* next;
+
+	TransitionType transitionType;
+
+	WeightBlender()
+	{
+		active = false;
+		blendTimer = 0.0;
+		blendDuration = 0.0;
+
+		transitionType = TransitionType::Smooth;
+	}
+
+	void Start(Animation* p_prev, Animation* p_next, float p_blendDuration, TransitionType p_transitionType)
+	{
+		active = true;
+		transitionType = p_transitionType;
+		
+		prev = p_prev;
+
+		if(transitionType == TransitionType::Frozen)
+			prev->frozen = true; 
+		
+		next = p_next;
+
+		next->frozen = false;
+		next->localClock = 0.0;
+		next->weight = 0;
+
+		blendDuration = p_blendDuration;
+	}
+
+	void Blend(double deltaTime)
+	{
+		blendTimer += deltaTime/1000;
+		float t = blendTimer / blendDuration;
+
+		next->weight = lerp(0.0f, 1.0f, t);
+		prev->weight = 1 - next->weight;
+
+		if(t >= 1)
+		{
+			next->weight = 1;
+
+			prev->Stop();
+
+			active = false;
+			blendTimer = 0.0;
+			blendDuration = 0.0;
+		}
 	}
 };
 
@@ -64,13 +145,14 @@ class Skeleton
 	private:
 		
 		Model* model;
+		WeightBlender blender;
 
 		std::map<int, Bone*> bones;
 		std::map<std::string, int> boneNameToID;
 		std::vector<std::string> bonesAdded;
 
-		int animationIndex;
 		std::vector<Animation*> animations;
+		int currentAnimationIndex;
 
 	public:
 		Bone* root;
@@ -109,13 +191,37 @@ class Skeleton
 		Bone* operator [](int i) { return bones[i]; }
 
 		Bone* GetRootBone() { return root; }
-		
-		double GetAnimationTimer() { return animations[animationIndex]->animationTimer; }
 
 		//Setters
 		//void SetAnimDuration(double pAnimationDuration) { animationDuration = pAnimationDuration; }
 
-		void SetAnimation(int index) { if(animationIndex < animations.size()) animationIndex = index; }
+		void SetAnimationImmediate(int index) 
+		{ 
+			if(index < animations.size()) 
+			{
+				if(currentAnimationIndex != -1)
+					animations[currentAnimationIndex]->Stop();
+
+				animations[index]->Start();
+				
+				currentAnimationIndex = index;
+			}
+		}
+
+		void SetAnimationGradual(int index, float blendDuration) //blendMode frozen by default
+		{ 
+			if(index < animations.size()) 
+			{
+				if(currentAnimationIndex == -1)
+					return; //Need an animation to blend from!
+
+				blender.Start(animations[currentAnimationIndex], animations[index], blendDuration, TransitionType::Frozen);
+				
+				currentAnimationIndex = index;
+			}
+		}
+
+		void PrintOuts(int winw, int winh);
 };
 
 #endif

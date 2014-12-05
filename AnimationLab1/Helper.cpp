@@ -17,6 +17,11 @@ glm::vec3 lerp(glm::vec3 v0, glm::vec3 v1, float t)
 	return v0 + t*(v1-v0);
 }
 
+float lerp(float w0, float w1, float t)
+{
+	return w0 + t*(w1-w0);
+}
+
 glm::vec3 cubicLerp(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, float t)
 {
 	glm::vec3 a0, a1, a2, a3;

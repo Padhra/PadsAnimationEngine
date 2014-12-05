@@ -5,6 +5,8 @@
 
 #include "Common.h"
 
+
+
 class Player 
 {
 	private:
@@ -23,6 +25,8 @@ class Player
 
 		Player(vector<Model*> &objectList, Camera* camera, Model* model);
 		~Player(){};
+
+		void Update(double deltaTime);
 
 		void Move(double deltaTime);
 		void LoadAnimation(const char* fileName) { model->GetSkeleton()->LoadAnimation(fileName); }

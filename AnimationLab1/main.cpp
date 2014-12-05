@@ -150,6 +150,7 @@ int main(int argc, char** argv)
 	
 	player = new Player(objectList, &camera, new Model(glm::vec3(0,0,0), glm::toMat4(correctSora), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
 	player->LoadAnimation("Models/sora.dae"); 
+	player->LoadAnimation("Animations/fight.dae"); 
 
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/arenaplanet.dae", shaderManager.GetShaderProgramID("diffuse")));
 
@@ -266,6 +267,7 @@ void update()
 		//																											//if no target do nothing?
 			if(objectList[i]->GetSkeleton()->hasKeyframes)
 				objectList[i]->GetSkeleton()->Animate(deltaTime); //this overwrites control above
+			
 			objectList[i]->GetSkeleton()->UpdateGlobalTransforms(objectList[i]->GetSkeleton()->GetRootBone(), glm::mat4());
 		}
 	}
@@ -345,7 +347,7 @@ void keyPressed (unsigned char key, int x, int y)
 {  
 	keyStates[key] = true; // Set the state of the current key to pressed  
 
-	if(KEY::KEY_L)
+	if(key == KEY::KEY_L)
 		editMode = EditMode::levelEdit;
 
 	camera.ProcessKeyboardOnce(key, x, y);
@@ -518,8 +520,7 @@ void printouts()
 	}
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
 
-	if(editMode == EditMode::levelEdit)
-	levelEditor->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
+	
 
 	ss.str(std::string()); // clear
 	ss << fps << " fps ";
@@ -558,16 +559,12 @@ void printouts()
 
 	//PRINT ANIMATION TIMER
 	//TODO - selected model
-
 	if(player != nullptr)
-	{
 		if(player->model->GetSkeleton()->hasKeyframes)
-		{
-			ss.str(std::string()); // clear
-			ss << "AnimationTimer: " << player->model->GetSkeleton()->GetAnimationTimer();
-			drawText(20,50, ss.str().c_str());
-		}
-	}
+			player->model->GetSkeleton()->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	if(editMode == EditMode::levelEdit)
+		levelEditor->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
 }
 
 

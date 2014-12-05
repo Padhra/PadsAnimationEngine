@@ -34,6 +34,9 @@ bool Model::Load(const char* file_name)
 		fprintf (stderr, "ERROR: reading mesh %s\n", file_name);
 		return false;
 	}
+
+	globalInverseTransform = convertAssimpMatrix(scene->mRootNode->mTransformation);
+	//globalInverseTransform = glm::inverse(globalInverseTransform);
 	
 	printf("LOADING MODEL...\n");
 	printf("%i animations\n", scene->mNumAnimations);

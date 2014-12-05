@@ -3,23 +3,17 @@
 #include "Model.h"
 #include "Camera.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
+#include "Common.h"
 
 class Player 
 {
 	private:
 		
-		float xzSpeed;
-		float speedScalar;
+		//float xzSpeed;
+		//float lookAngle;
 
-		float rotation;
-
-		glm::vec3 direction;
 		glm::vec3 oldForward;
+		float speedScalar;
 
 		Camera* camera;
 

@@ -22,6 +22,43 @@
 
 class Model;
 
+struct PosKeyFrame
+{
+	glm::vec3 position;
+	double time;
+};
+
+struct RotKeyFrame
+{
+	glm::quat rotation;
+	double time;
+};
+
+struct BoneAnimation
+{
+	int boneID;
+	std::vector<PosKeyFrame*> posKeyframes;
+	std::vector<RotKeyFrame*> rotKeyframes;
+};
+
+struct Animation {
+
+	int animationID;
+
+	double animationTimer;
+	double duration;
+
+	std::vector<BoneAnimation*> boneAnimations;
+	
+	Animation(int p_id, double p_duration)
+	{
+		animationID = p_id;
+		duration = p_duration;
+
+		animationTimer = 0.0;
+	}
+};
+
 class Skeleton
 {
 	private:
@@ -30,14 +67,10 @@ class Skeleton
 
 		std::map<int, Bone*> bones;
 		std::map<std::string, int> boneNameToID;
+		std::vector<std::string> bonesAdded;
 
 		int animationIndex;
-		int numAnimations;
-
-		double animationDuration;
-		double animationTimer;
-
-		std::vector<std::string> bonesAdded;
+		std::vector<Animation*> animations;
 
 	public:
 		Bone* root;
@@ -77,12 +110,12 @@ class Skeleton
 
 		Bone* GetRootBone() { return root; }
 		
-		double GetAnimationTimer() { return animationTimer; }
+		double GetAnimationTimer() { return animations[animationIndex]->animationTimer; }
 
 		//Setters
-		void SetAnimDuration(double pAnimationDuration) { animationDuration = pAnimationDuration; }
+		//void SetAnimDuration(double pAnimationDuration) { animationDuration = pAnimationDuration; }
 
-		void SetAnimation(int index) { if(animationIndex < numAnimations) animationIndex = index; }
+		void SetAnimation(int index) { if(animationIndex < animations.size()) animationIndex = index; }
 };
 
 #endif

@@ -4,8 +4,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp> 
+#include "Common.h"
 
 #include <assimp/cimport.h> // C importer
 #include <assimp/scene.h> // collects data
@@ -86,6 +85,8 @@ class Model
 
 		Skeleton* skeleton;
 		bool hasSkeleton;
+
+		glm::mat4 globalInverseTransform;
 		
 	public:
 		
@@ -118,13 +119,26 @@ class Model
 		
 		glm::mat4 GetModelMatrix() 
 		{ 
-			return glm::translate(glm::mat4(1.0f), worldProperties.translation) 
+			return //globalInverseTransform *
+				glm::translate(glm::mat4(1.0f), worldProperties.translation) 
 				* worldProperties.orientation
 				* glm::scale(glm::mat4(1.0f), worldProperties.scale);
 		}		
 
+		glm::vec3 GetEulerAngles()
+		{
+			return glm::eulerAngles(glm::toQuat(worldProperties.orientation));
+		}
+
+		//TODO - Test
+		glm::vec3 GetForward()
+		{
+			return glm::toQuat(worldProperties.orientation) * glm::vec3(0,0,1);
+		}
+
 		//Setters
 		void SetShaderProgramID(GLuint p_shaderProgramID) { shaderProgramID = p_shaderProgramID; }
+
 };
 
 #endif

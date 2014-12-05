@@ -1,12 +1,6 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp> 
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm\gtx\quaternion.hpp>
-
 #include <assimp/Importer.hpp>
 #include <assimp/cimport.h> // C importer
 #include <assimp/scene.h> // collects data
@@ -19,10 +13,11 @@
 #include "ShaderManager.h"
 #include "Spline.h"
 #include "Node.h"
-#include "LevelSaver.h"
+#include "LevelEditor.h"
 #include "Player.h"
 
 #include "Common.h"
+#include "Keys.h"
 
 #include <string> 
 #include <fstream>
@@ -52,10 +47,8 @@ void reshape(int w, int h);
 void update();
 void draw();
 
-bool isRightKeyPressed = false;
-bool isLeftKeyPressed = false;
-bool isUpKeyPressed = false;
-bool isDownKeyPressed = false;
+bool directionKeys[4] = {false};
+
 bool keyStates[256] = {false}; // Create an array of boolean values of length 256 (0-255)
 
 void processContinuousInput();
@@ -63,6 +56,7 @@ void printouts();
 
 Camera camera;
 glm::mat4 projectionMatrix; // Store the projection matrix
+bool freeMouse = false;
 
 int WINDOW_WIDTH = 1280;
 int WINDOW_HEIGHT = 720;
@@ -73,34 +67,17 @@ double deltaTime;
 int fps = 0;
 int frameCounterTime = 0;
 int frames = 0;
-char *text;
+//char *text;
 
 ShaderManager shaderManager;
 vector<Model*> objectList;
-LevelSaver levelSaver;
+LevelEditor* levelEditor;
+
+short editMode = 0;
+enum EditMode { levelEdit = 0 };
 
 Player* player;
-
-Model* target;
-float targetSpeed = 0.01f;
-
-Spline targetPath;
-
-int testAnimBone = 0;
-int selectedTarget = 0;
-
-std::vector<glm::vec3> lines;
-
-short uiMode = 0;
-enum UIMode { boneSelect = 0, xAngle, yAngle, zAngle, nodeSelect, nodeMove, lerpMode, targetMove, splineSpeed, fileSelect };
-bool altDirectional = false;
-
-static bool constraints = false;
-bool firstRun = true;
-
-int selectedFile = 1;
-
-bool freeMouse = false;
+bool moveFix = false;
 
 int main(int argc, char** argv)
 {
@@ -151,24 +128,27 @@ int main(int argc, char** argv)
 	projectionMatrix = glm::perspective(60.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f /*near plane*/, 100.f /*far plane*/); // Create our perspective projection matrix
 
 	//TODO - constructor for camera
-	camera.Init(glm::vec3(0.0f, 0.0f, 0.0f), 0.0002f, 0.005f); 
+	camera.Init(glm::vec3(0.0f, 0.0f, 0.0f), 0.0002f, 0.005f, false); 
+
+	levelEditor = new LevelEditor(&objectList);
 
 	shaderManager.Init();
 
 	shaderManager.CreateShaderProgram("skinned", "Shaders/skinned.vs", "Shaders/skinned.ps");
 	shaderManager.CreateShaderProgram("diffuse", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
 
+	shaderManager.CreateShaderProgram("text", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
+
 	Node::objectList = &objectList;
 
-	glm::quat correctBlender = glm::quat();
-	correctBlender *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
-	//correctBlender *= glm::angleAxis(180.0f, glm::vec3(0,1,0));
-	correctBlender *= glm::angleAxis(-90.0f, glm::vec3(0,0,1));
+	glm::quat correctSora = glm::quat();
+	correctSora *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
+	correctSora *= glm::angleAxis(-90.0f, glm::vec3(0,0,1));
 
-	vector<Model*> loadedObjects = levelSaver.Load();
+	vector<Model*> loadedObjects = LevelEditor::Load(1);
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
-	player = new Player(objectList, &camera, new Model(glm::vec3(0,0,0), glm::toMat4(correctBlender), glm::vec3(1), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
+	player = new Player(objectList, &camera, new Model(glm::vec3(0,0,0), glm::toMat4(correctSora), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
 	player->LoadAnimation("Models/sora.dae"); 
 
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/arenaplanet.dae", shaderManager.GetShaderProgramID("diffuse")));
@@ -247,6 +227,15 @@ void update()
 
 	camera.Update(deltaTime);
 
+	if(!moveFix)
+	{
+		bool camMode = camera.flycam;
+		camera.flycam = false;
+		player->Move(deltaTime);
+		camera.flycam = camMode;
+		moveFix = true; 
+	}
+
 	//Animation
 	for(int i = 0; i< objectList.size(); i++)
 	{
@@ -281,16 +270,15 @@ void update()
 		}
 	}
 
+	/*if(objectList.size() == 2)
+	{
+		objectList[0]->worldProperties.orientation *= glm::toMat4(glm::angleAxis(1.0f, glm::vec3(0,1,0)));
+	}*/
+
 	//FOR ITERATING SUBCHAINS
 	//std::map<char,int>::iterator it;
 	//for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 	//std::cout << it->first << " => " << it->second << '\n';
-
-	if(targetPath.nodes.size() > 0 && uiMode != UIMode::targetMove)
-	{
-		targetPath.Update(deltaTime);
-		target->worldProperties.translation = targetPath.GetPosition();
-	}
 
 	processContinuousInput();
 	draw();
@@ -352,97 +340,27 @@ void draw()
 	glutSwapBuffers();
 }
 
-//TODO - Make it work!
-void reshape(int w, int h)
-{
-	if(h == 0)
-		h = 1;
-
-	float ratio = 1.0 * w / h;
-
-	projectionMatrix = glm::perspective(60.0f, ratio, 0.1f, 100.f); 
-
-	glutReshapeWindow( w, h);
-
-	WINDOW_WIDTH = w;
-	WINDOW_HEIGHT = h;
-}
-
+//KEYBOARD FUCNTIONS
 void keyPressed (unsigned char key, int x, int y) 
 {  
 	keyStates[key] = true; // Set the state of the current key to pressed  
 
+	if(KEY::KEY_L)
+		editMode = EditMode::levelEdit;
+
 	camera.ProcessKeyboardOnce(key, x, y);
 	player->ProcessKeyboardOnce(key, x, y);
-
-	if(key == 32) //Spacebar
-		//altDirectional = !altDirectional;
-		levelSaver.Save(objectList);
-
-	if(key == 'o')
+	
+	if(editMode == levelEdit)
 	{
-		vector<Model*> loadedObjects = levelSaver.Load();
-		objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
+		levelEditor->ProcessKeyboardOnce(key, x, y);
+
+		if(key == KEY::KEY_8)
+		{
+			vector<Model*> loadedObjects = levelEditor->Load(levelEditor->fileSelect);
+			objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
+		}
 	}
-
-	#pragma region SPLINE EDITOR
-	////if(key == 'o')
-	//	//targetPath.Save(selectedFile);
-	//if(key == 'l')
-	//{
-	//	int size = targetPath.nodes.size();
-	//	for(int i = 0; i < size; i++)
-	//	{
-	//		Node* node = *(targetPath.nodes.begin());
-	//		objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
-	//		targetPath.DeleteNode(node);
-	//	}
-
-	//	targetPath.Load(selectedFile);
-	//}
-	//if(key == 'p')
-	//	targetPath.AddNode(new Node(glm::vec3(0,0,0)));
-	//if(key == 't')
-	//	if (uiMode != UIMode::targetMove)
-	//		uiMode = UIMode::targetMove;
-	//	else
-	//		uiMode = -1;
-	//if(key == 'n')
-	//	uiMode = UIMode::nodeSelect;
-	//if(key == 'm')
-	//	uiMode = UIMode::nodeMove;
-	//if(key == 'i')
-	//	if(targetPath.mode == InterpolationMode::Cubic)
-	//		targetPath.SetMode(InterpolationMode::Linear);
-	//	else
-	//		targetPath.SetMode(InterpolationMode::Cubic);
-	//if(key == 'j')
-	//{
-	//	if(targetPath.nodes.size() > 0)
-	//	{
-	//		Node* node = targetPath.nodes[selectedTarget % targetPath.nodes.size()];
-	//		objectList.erase(std::remove(objectList.begin(), objectList.end(), node->box), objectList.end());
-	//		targetPath.DeleteNode(node);
-	//	}
-	//}
-	//if(key == 'c')
-	//	Skeleton::ConstraintsEnabled = !Skeleton::ConstraintsEnabled;
-	//if(key == 'u')
-	//	uiMode = UIMode::splineSpeed;
-	//if(key == 'h')
-	//	uiMode = UIMode::fileSelect;
-	#pragma endregion
-
-	#pragma region SKELETAL EDITOR
-	if(key == 'b')
-		uiMode = UIMode::boneSelect;
-	if(key == 'x')
-		uiMode = UIMode::xAngle;
-	if(key == 'y')
-		uiMode = UIMode::yAngle;
-	if(key == 'z')
-		uiMode = UIMode::zAngle;
-	#pragma endregion
 }  
   
 void keyUp (unsigned char key, int x, int y) 
@@ -450,6 +368,76 @@ void keyUp (unsigned char key, int x, int y)
 	keyStates[key] = false; // Set the state of the current key to not pressed  
 }  
 
+//Process keystates
+void processContinuousInput()
+{
+	if(keyStates[27])
+	{
+		if(!freeMouse)
+		{
+			freeMouse = true;
+			glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
+		}
+	}
+	//exit(0);
+
+	camera.ProcessKeyboardContinuous(keyStates, deltaTime);
+	player->ProcessKeyboardContinuous(keyStates, deltaTime);
+
+	if(editMode == levelEdit)
+		levelEditor->ProcessKeyboardContinuous(keyStates, directionKeys, deltaTime);
+}
+
+//DIRECTIONAL KEYS DOWN
+void handleSpecialKeypress(int key, int x, int y)
+{
+	switch (key) 
+	{
+		case GLUT_KEY_LEFT:
+			directionKeys[DKEY::Left] = true;
+			break;
+
+		case GLUT_KEY_RIGHT:
+			directionKeys[DKEY::Right] = true;	
+			break;
+
+		case GLUT_KEY_UP:
+			directionKeys[DKEY::Up] = true;
+			break;
+
+		case GLUT_KEY_DOWN:
+			directionKeys[DKEY::Down] = true;
+			break;
+	}
+
+	if(editMode == levelEdit)
+		levelEditor->ProcessKeyboardOnce(key, x, y);
+}
+
+//DIRECTIONAL KEYS UP
+void handleSpecialKeyReleased(int key, int x, int y) 
+{
+	switch (key) 
+	{
+		case GLUT_KEY_LEFT:
+			directionKeys[DKEY::Left] = false;
+			break;
+
+		case GLUT_KEY_RIGHT:
+			directionKeys[DKEY::Right] = false;	
+			break;
+
+		case GLUT_KEY_UP:
+			directionKeys[DKEY::Up] = false;
+			break;
+
+		case GLUT_KEY_DOWN:
+			directionKeys[DKEY::Down] = false;
+			break;
+	}
+}
+
+//MOUSE FUCNTIONS
 void passiveMouseMotion(int x, int y)  
 {
 	if(!freeMouse)
@@ -489,7 +477,7 @@ void mouseWheel(int button, int dir, int x, int y)
 		camera.Zoom(deltaTime);
 }
 
-int xx, xy, xz;
+//GAMEPAD FUNCTION
 
 void  gamepad (unsigned int buttonMask, int x, int y, int z)
 {
@@ -509,198 +497,33 @@ void  gamepad (unsigned int buttonMask, int x, int y, int z)
 	//x, y left analog stick. deadzone 200
 }
 
-//DIRECTIONAL KEYS DOWN
-void handleSpecialKeypress(int key, int x, int y)
-{
-	switch (key) 
-	{
-		case GLUT_KEY_LEFT:
-
-			if(uiMode == UIMode::boneSelect)
-			{
-				testAnimBone--;
-			}	
-			else if(uiMode == UIMode::nodeSelect)
-			{
-				selectedTarget--;
-			}
-			else if(uiMode == UIMode::splineSpeed)
-			{
-				Spline::speedScalar -= 0.1f;
-
-				if(Spline::speedScalar < 0)
-					Spline::speedScalar = 0;
-			}
-			else if(uiMode == UIMode::fileSelect)
-			{
-				selectedFile--;
-
-				if(selectedFile < 1)
-					selectedFile = 1;
-			}
-			
-			isLeftKeyPressed = true;
-
-			break;
-
-		case GLUT_KEY_RIGHT:
-
-			if(uiMode == UIMode::boneSelect)
-				testAnimBone++;
-			else if(uiMode == UIMode::nodeSelect)
-				selectedTarget++;
-			else if(uiMode == UIMode::splineSpeed)
-				Spline::speedScalar += 0.1f;
-			else if(uiMode == UIMode::fileSelect)
-				selectedFile++;
-
-			isRightKeyPressed = true;
-			
-			break;
-
-		case GLUT_KEY_UP:
-			isUpKeyPressed = true;
-			break;
-
-		case GLUT_KEY_DOWN:
-			isDownKeyPressed = true;
-			break;
-	}
-}
-
-//DIRECTIONAL KEYS UP
-void handleSpecialKeyReleased(int key, int x, int y) 
-{
-	switch (key) 
-	{
-		case GLUT_KEY_LEFT:
-			isLeftKeyPressed = false;
-			break;
-
-		case GLUT_KEY_RIGHT:
-			isRightKeyPressed = false;
-			break;
-
-		case GLUT_KEY_UP:
-			isUpKeyPressed = false;
-			break;
-
-		case GLUT_KEY_DOWN:
-			isDownKeyPressed = false;
-			break;
-	}
-}
-
 // OTHER FUNCTIONS
-
-//Process keystates
-void processContinuousInput()
-{
-	if(keyStates[27])
-	{
-		if(!freeMouse)
-		{
-			freeMouse = true;
-			glutSetCursor(GLUT_CURSOR_LEFT_ARROW);
-		}
-	}
-	//exit(0);
-
-	camera.ProcessKeyboardContinuous(keyStates, deltaTime);
-	player->ProcessKeyboardContinuous(keyStates, deltaTime);
-
-	#pragma region OLD TARGET MOVE CODE
-	/*if(uiMode == UIMode::targetMove)
-	{
-		if(isLeftKeyPressed)
-			target->worldProperties.translation += glm::vec3(1,0,0) * targetSpeed * float(deltaTime);
-		if(isRightKeyPressed)
-			target->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
-		if(isUpKeyPressed && !altDirectional)
-			target->worldProperties.translation += glm::vec3(0,1,0) * targetSpeed * float(deltaTime);
-		if(isDownKeyPressed && !altDirectional)
-			target->worldProperties.translation += glm::vec3(0,-1,0) * targetSpeed * float(deltaTime);
-		if(isUpKeyPressed && altDirectional)
-			target->worldProperties.translation += glm::vec3(0,0,1) * targetSpeed * float(deltaTime);
-		if(isDownKeyPressed && altDirectional)
-			target->worldProperties.translation += glm::vec3(0,0,-1) * targetSpeed * float(deltaTime);
-	}*/
-	#pragma endregion
-
-	if(targetPath.nodes.size() > 0 && uiMode == UIMode::nodeMove)
-	{
-		if(isLeftKeyPressed)
-			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(1,0,0) * targetSpeed * float(deltaTime);
-		if(isRightKeyPressed)
-			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(-1,0,0) * targetSpeed * float(deltaTime);
-		if(isUpKeyPressed && !altDirectional)
-			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,1,0) * targetSpeed * float(deltaTime);
-		if(isDownKeyPressed && !altDirectional)
-			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,-1,0) * targetSpeed * float(deltaTime);
-		if(isUpKeyPressed && altDirectional)
-			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,0,1) * targetSpeed * float(deltaTime);
-		if(isDownKeyPressed && altDirectional)
-			targetPath.nodes[selectedTarget % targetPath.nodes.size()]->box->worldProperties.translation += glm::vec3(0,0,-1) * targetSpeed * float(deltaTime);
-	}
-}
 
 void printouts()
 {
 	std::stringstream ss;
 
-	glColor3f(1,1,1);
+	shaderManager.SetShaderProgram(shaderManager.GetShaderProgramID("text"));
 
 	//Bottom left is 0,0
 
 	ss.str(std::string()); // clear
 	ss << "Current Mode: " ;
-	switch(uiMode)
+	switch(editMode)
 	{
-		case UIMode::boneSelect:
-			ss << "boneSelect";
+		case EditMode::levelEdit:
+			ss << "levelSelect";
 			break;
-		case UIMode::lerpMode:
-			ss << "lerpMode";
-			break;
-		case UIMode::nodeMove:
-			ss << "nodeMove";
-			break;
-		case UIMode::nodeSelect:
-			ss << "nodeSelect";
-			break;
-		case UIMode::splineSpeed:
-			ss << "splineSpeed";
-			break;
-		case UIMode::targetMove:
-			ss << "targetMove";
-			break;
-		case UIMode::xAngle:
-			ss << "xAngle";
-			break;
-		case UIMode::yAngle:
-			ss << "yAngle";
-			break;
-		case UIMode::zAngle:
-			ss << "zAngle";
-			break;
+		
 	}
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
+
+	if(editMode == EditMode::levelEdit)
+	levelEditor->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	ss.str(std::string()); // clear
 	ss << fps << " fps ";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-60, ss.str().c_str());
-
-	//ss.str(std::string()); // clear
-	//ss << xx << " xx ";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-80, ss.str().c_str());
-
-	//ss.str(std::string()); // clear
-	//ss << xy << " xy ";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-100, ss.str().c_str());
-
-	//ss.str(std::string()); // clear
-	//ss << xz << " xz ";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-120, ss.str().c_str());
 
 	ss.str(std::string()); // clear
 	if(Skeleton::ConstraintsEnabled)
@@ -708,90 +531,6 @@ void printouts()
 	else
 		ss << "Constraints disabled |c|";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
-
-	//PRINT TARGET POSITION
-	
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
-
-	//PRINT SPLINE INFO
-	/*ss.str(std::string());
-	ss << "SPLINE EDITOR ";
-	drawText(20,220, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|h| File Select: " << selectedFile;
-	drawText(20,200, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|u| Speed scalar: " << Spline::speedScalar;
-	drawText(20,180, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|p| Add a node ";
-	drawText(20,160, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|o| Save Spline ";
-	drawText(20,140, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|l| Load Spline ";
-	drawText(20,120, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|i| Interpolation Mode: ";
-	if(targetPath.mode == InterpolationMode::Linear)
-		ss << "Linear";
-	else
-		ss << "Cubic";
-	drawText(20,100, ss.str().c_str());
-
-	ss.str(std::string());
-	if(targetPath.nodes.size() > 0)
-		ss << "|n| Selected Node: " << selectedTarget % targetPath.nodes.size();
-	else
-		ss << "|n| Selected Node: N/A";
-	drawText(20,80, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|j| Delete selected node ";
-	drawText(20,60, ss.str().c_str());
-
-	ss.str(std::string());
-	ss << "|m| Move Selected Node";
-	drawText(20,40, ss.str().c_str());*/
-
-	//ss.str(std::string()); // clear
-	//ss << std::fixed << std::setprecision(PRECISION) << "|t| target (x: " << target->worldProperties.translation.x << ", y: " 
-	//	<< target->worldProperties.translation.y << ", z: " << target->worldProperties.translation.z << ")";
-	//drawText(20,20, ss.str().c_str());
-
-	//PRINT BONE SELECTION (of first object)
-	if(objectList.size() > 0)
-	{
-		if(objectList[0]->HasSkeleton())
-		{
-			ss.str(std::string()); // clear
-			ss << "SKELETAL CONTROLS";
-			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),100, ss.str().c_str());
-	
-			Bone* bone = objectList[0]->GetSkeleton()->GetBone(testAnimBone % objectList[0]->GetSkeleton()->GetBones().size());
-
-			ss.str(std::string()); // clear
-			ss << "Selected Bone: [" << int(bone->id) << "] " << bone->name << " |b|";
-			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),80, ss.str().c_str());
-	
-			ss.str(std::string()); // clear
-			ss << "x Angle: " << bone->GetEulerAngles().x << " |x|";
-			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),60, ss.str().c_str());
-			ss.str(std::string()); // clear
-			ss << "y Angle: " << bone->GetEulerAngles().y << " |y|";
-			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),40, ss.str().c_str());
-			ss.str(std::string()); // clear
-			ss << "z Angle: " << bone->GetEulerAngles().z << " |z|";
-			drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),20, ss.str().c_str());
-		}
-	}
 
 	//PRINT CAMERA
 	ss.str(std::string()); // clear
@@ -810,37 +549,23 @@ void printouts()
 	ss.str(std::string()); // clear
 	ss << "player.pos: (" << std::fixed << std::setprecision(PRECISION) << player->model->worldProperties.translation.x << ", " << player->model->worldProperties.translation.y 
 		<< ", " << player->model->worldProperties.translation.z << ")";
-	drawText(20,WINDOW_HEIGHT-80, ss.str().c_str());
+	drawText(20,WINDOW_HEIGHT-100, ss.str().c_str());
 
 	glm::vec3 euler = glm::eulerAngles(glm::toQuat(player->model->worldProperties.orientation));
 	ss.str(std::string()); // clear
 	ss << "player.rot: (" << std::fixed << std::setprecision(PRECISION) << euler.x << ", " << euler.y << ", " << euler.z << ")";
-	drawText(20,WINDOW_HEIGHT-100, ss.str().c_str());
-
-	//PRINT BONES
- //   for(int boneidx = 0; boneidx < objectList[0]->GetSkeleton()->GetBones().size(); boneidx++)
-	//{
-	//	Bone* tmp = objectList[0]->GetSkeleton()->GetBones()[boneidx];
-
-	//	ss.str(std::string()); // clear
-
-	//	ss << std::fixed << std::setprecision(PRECISION) << "bone[" << boneidx << "] = (" << tmp->GetMeshSpacePosition().x << ", " << tmp->GetMeshSpacePosition().y << ", " << tmp->GetMeshSpacePosition().z << ")";
-	//	ss << " -- (" << decomposeT(tmp->finalTransform).x << ", " << decomposeT(tmp->finalTransform).y << ", " << decomposeT(tmp->finalTransform).z << ")";
-	//	drawText(20,20*(boneidx+1), ss.str().c_str());
-	//}
+	drawText(20,WINDOW_HEIGHT-120, ss.str().c_str());
 
 	//PRINT ANIMATION TIMER
 	//TODO - selected model
-	if(objectList.size() > 0)
+
+	if(player != nullptr)
 	{
-		if(objectList[0]->HasSkeleton())
+		if(player->model->GetSkeleton()->hasKeyframes)
 		{
-			if(objectList[0]->GetSkeleton()->hasKeyframes)
-			{
-				ss.str(std::string()); // clear
-				ss << "AnimationTimer: " << objectList[0]->GetSkeleton()->GetAnimationTimer();
-				drawText(20,50, ss.str().c_str());
-			}
+			ss.str(std::string()); // clear
+			ss << "AnimationTimer: " << player->model->GetSkeleton()->GetAnimationTimer();
+			drawText(20,50, ss.str().c_str());
 		}
 	}
 }

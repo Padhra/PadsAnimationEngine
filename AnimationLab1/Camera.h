@@ -4,15 +4,13 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp> 
-
 #include <string> 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
 #include "Keys.h"
+#include "Common.h"
 
 struct ViewProperties 
 {

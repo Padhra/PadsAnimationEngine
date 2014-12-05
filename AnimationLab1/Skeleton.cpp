@@ -2,7 +2,6 @@
 #include <sstream>
 #include <iostream>
 #include "Model.h"
-#include <glm/gtx/euler_angles.hpp>
 
 bool Skeleton::ConstraintsEnabled = true;
 float Skeleton::AnimationSpeedScalar = 1.0f;
@@ -10,9 +9,6 @@ float Skeleton::AnimationSpeedScalar = 1.0f;
 Skeleton::Skeleton(Model* p_myModel)
 {
 	animationIndex = 0;
-	animationTimer = 0.0;
-
-	numAnimations = 0;
 
 	hasKeyframes = false;
 
@@ -144,65 +140,70 @@ void Skeleton::Animate(double deltaTime)
 	if(!hasKeyframes)
 		return;
 
-	animationTimer += deltaTime/1000 * AnimationSpeedScalar;
+	Animation* animation = animations[animationIndex];
 
-	if (animationTimer >= animationDuration) 
-		animationTimer = 0;//animationDuration - animationTimer; //animation will loop
+	animation->animationTimer += deltaTime/1000;
 
-	for(int boneidx = 0; boneidx < bones.size(); boneidx++)
+	if (animation->animationTimer >= animation->duration) 
+		animation->animationTimer = 0.0;
+
+	for(int boneidx = 0; boneidx < animation->boneAnimations.size(); boneidx++)
 	{
 		glm::mat4 translation = glm::mat4(1);
 		glm::mat4 orientation = glm::mat4(1);
 
-		if (bones[boneidx]->animations[animationIndex].posKeyframes.size() > 0)  // if this bone has keyframes
+		BoneAnimation* boneAnimation = animation->boneAnimations.at(boneidx);
+
+		if(boneAnimation->posKeyframes.size() > 0)// if this bone has keyframes
 		{
 			int prev_key = 0;
 			int next_key = 0;
-		
+
 			//Find the two keyframes
-			for (int keyidx = 0; keyidx < bones[boneidx]->animations[animationIndex].posKeyframes.size() - 1; keyidx++) 
+			for (int keyidx = 0; keyidx < boneAnimation->posKeyframes.size() - 1; keyidx++) 
 			{
 				prev_key = keyidx;
 				next_key = keyidx + 1;
 
-				if (bones[boneidx]->animations[animationIndex].posKeyframes[next_key]->time >= animationTimer) // if the next keyframe is greater than the timer, then we have our two keyframes
+				
+				if (boneAnimation->posKeyframes[next_key]->time >= animation->animationTimer) // if the next keyframe is greater than the timer, then we have our two keyframes
 					break;
 			}
-		
-			float timeBetweenKeys = bones[boneidx]->animations[animationIndex].posKeyframes[next_key]->time - bones[boneidx]->animations[animationIndex].posKeyframes[prev_key]->time;
-			float t = (animationTimer - bones[boneidx]->animations[animationIndex].posKeyframes[prev_key]->time) / timeBetweenKeys; 
+
+			float timeBetweenKeys = boneAnimation->posKeyframes[next_key]->time - boneAnimation->posKeyframes[prev_key]->time;
+			float t = (animation->animationTimer - boneAnimation->posKeyframes[prev_key]->time) / timeBetweenKeys;
 
 			std::stringstream ss;
 			ss << "t: "<< t;
 			drawText(20,20, ss.str().c_str());
 
-			translation = glm::translate(glm::mat4(1), lerp(bones[boneidx]->animations[animationIndex].posKeyframes[prev_key]->position, 
-				bones[boneidx]->animations[animationIndex].posKeyframes[next_key]->position, t));
-			//translation = glm::translate(glm::mat4(1), bones[boneidx]->posKeyframes[prev_key]->position); //TODO - add mode
+			translation = glm::translate(glm::mat4(1), lerp(boneAnimation->posKeyframes[prev_key]->position, 
+				boneAnimation->posKeyframes[next_key]->position, t));
+			//translation = glm::translate(glm::mat4(1), animation.boneAnimations[boneidx].posKeyframes[prev_key]->position); //TODO - add mode
 		}
 
-		if (bones[boneidx]->animations[animationIndex].rotKeyframes.size() > 0)  // if this bone has keyframes
+		if (boneAnimation->rotKeyframes.size() > 0)  // if this bone has keyframes
 		{
 			int prev_key = 0;
 			int next_key = 0;
 		
 			//Find the two keyframes
-			for (int keyidx = 0; keyidx < bones[boneidx]->animations[animationIndex].rotKeyframes.size() - 1; keyidx++) 
+			for (int keyidx = 0; keyidx < boneAnimation->rotKeyframes.size() - 1; keyidx++) 
 			{
 				prev_key = keyidx;
 				next_key = keyidx + 1;
 
-				if (bones[boneidx]->animations[animationIndex].rotKeyframes[next_key]->time >= animationTimer) // if the next keyframe is greater than the timer, then we have our two keyframes
+				if (boneAnimation->rotKeyframes[next_key]->time >= animation->animationTimer) // if the next keyframe is greater than the timer, then we have our two keyframes
 					break;
 			}
 
-			float timeBetweenKeys = bones[boneidx]->animations[animationIndex].rotKeyframes[next_key]->time - bones[boneidx]->animations[animationIndex].rotKeyframes[prev_key]->time;
-			float t = (animationTimer - bones[boneidx]->animations[animationIndex].rotKeyframes[prev_key]->time) / timeBetweenKeys;
+			float timeBetweenKeys = boneAnimation->rotKeyframes[next_key]->time - boneAnimation->rotKeyframes[prev_key]->time;
+			float t = (animation->animationTimer - boneAnimation->rotKeyframes[prev_key]->time) / timeBetweenKeys;
 	
-			glm::quat interpolatedquat = glm::slerp(bones[boneidx]->animations[animationIndex].rotKeyframes[prev_key]->rotation, 
-				bones[boneidx]->animations[animationIndex].rotKeyframes[next_key]->rotation, t);
+			glm::quat interpolatedquat = glm::slerp(boneAnimation->rotKeyframes[prev_key]->rotation, 
+				boneAnimation->rotKeyframes[next_key]->rotation, t);
 			orientation = glm::toMat4(interpolatedquat);
-			//orientation = glm::toMat4(bones[boneidx]->rotKeyframes[prev_key]->rotation);
+			//orientation = glm::toMat4(animation.boneAnimations[boneidx].rotKeyframes[prev_key]->rotation);
 
 			//xzspeed = 3
 				
@@ -212,7 +213,7 @@ void Skeleton::Animate(double deltaTime)
 			//finalOrientation = orientation1 * w1 + orientation2 * w2;
 		}
 
-		bones[boneidx]->transform = translation * orientation; 
+		bones[boneAnimation->boneID]->transform = translation * orientation; 
 	}
 }
 
@@ -357,7 +358,8 @@ bool Skeleton::LoadAnimation(const char* file_name)
 		printf ("animation duration %f\n", anim->mDuration);
 		printf ("ticks per second %f\n", anim->mTicksPerSecond);*/
 
-		animationDuration = anim->mDuration;
+		Animation* animation = new Animation(animations.size(), anim->mDuration);
+		///animationDuration = anim->mDuration;
 
 		//printf ("anim duration is %f\n", anim->mDuration);
 			
@@ -365,17 +367,17 @@ bool Skeleton::LoadAnimation(const char* file_name)
 		for (int i = 0; i < (int)anim->mNumChannels; i++) 
 		{
 			aiNodeAnim* chan = anim->mChannels[i];
-			
-			Bone* bone = GetBone(chan->mNodeName.C_Str ());
-
-			KeyframeAnimation animation;
-				
+			Bone* bone = GetBone(chan->mNodeName.C_Str()); //Grab the bone
+	
 			if (!bone) 
 			{
 				fprintf (stderr, "\nWARNING: did not find node named %s in skeleton."
 					"animation broken.\n", chan->mNodeName.C_Str ());
 				continue;
 			}
+
+			BoneAnimation* boneAnimation = new BoneAnimation();
+			boneAnimation->boneID = bone->id;
 
 			// add position keys to node
 			for (int i = 0; i < chan->mNumPositionKeys; i++) 
@@ -387,7 +389,7 @@ bool Skeleton::LoadAnimation(const char* file_name)
 				pkf->position = glm::vec3(key.mValue.x, key.mValue.y, key.mValue.z);
 				pkf->time = key.mTime; //TODO - check if time varies for each variable??
 
-				animation.posKeyframes.push_back(pkf);
+				boneAnimation->posKeyframes.push_back(pkf);
 			}
 
 			// add rotation keys to node
@@ -404,7 +406,7 @@ bool Skeleton::LoadAnimation(const char* file_name)
 
 				rkf->time = key.mTime;
 
-				animation.rotKeyframes.push_back(rkf);
+				boneAnimation->rotKeyframes.push_back(rkf);
 			}
 
 			// add scaling keys to node
@@ -417,10 +419,10 @@ bool Skeleton::LoadAnimation(const char* file_name)
 			//	sn->sca_key_times[i] = key.mTime;
 			//}
 
-			bone->animations[numAnimations] = animation;
+			animation->boneAnimations.push_back(boneAnimation);
 		} 
 
-		numAnimations++;
+		animations.push_back(animation);
 	}
 	else 
 	{

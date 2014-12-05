@@ -15,24 +15,6 @@
 #include "Helper.h"
 #include "Common.h"
 
-struct PosKeyFrame
-{
-	glm::vec3 position;
-	double time;
-};
-
-struct RotKeyFrame
-{
-	glm::quat rotation;
-	double time;
-};
-
-struct KeyframeAnimation
-{
-	std::vector<PosKeyFrame*> posKeyframes;
-	std::vector<RotKeyFrame*> rotKeyframes;
-};
-
 struct DOFLimits
 {
 	bool xAxis;
@@ -86,8 +68,6 @@ class Bone
 		glm::mat4 transform;
 		glm::mat4 finalTransform;
 		glm::mat4 globalTransform;
-
-		KeyframeAnimation animations[MAX_ANIMATIONS];
 
 		DOFLimits dofLimits;
 

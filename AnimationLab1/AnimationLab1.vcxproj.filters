@@ -25,20 +25,23 @@
     <Filter Include="Source Files\Model">
       <UniqueIdentifier>{4252df49-03dc-49bb-9291-d8f0ab89bdca}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Spline">
-      <UniqueIdentifier>{48e2eed7-b05a-4bae-ad87-1332c177339f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Spline">
-      <UniqueIdentifier>{a667f8db-1261-4f44-8a52-964d1ee88194}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\LevelEditor">
-      <UniqueIdentifier>{423f0781-449b-4c55-a3b6-a91071a233eb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Player">
+    <Filter Include="Header Files\Characters">
       <UniqueIdentifier>{d014a99d-754f-4468-83ce-e8cae14098e8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Player">
+    <Filter Include="Source Files\Characters">
       <UniqueIdentifier>{ca217b5a-4685-4aa7-b405-934e82500037}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Editors">
+      <UniqueIdentifier>{423f0781-449b-4c55-a3b6-a91071a233eb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Editors">
+      <UniqueIdentifier>{b239b3a1-3d61-48cb-86a1-6eded396b6a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Editors\SplineEditor">
+      <UniqueIdentifier>{5e93dcf7-4652-4d84-9f59-1ace2e32894a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Editors\SplineEditor">
+      <UniqueIdentifier>{a3738fb6-380c-444e-8fae-3bf6c604401f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -63,17 +66,20 @@
     <ClCompile Include="Model.cpp">
       <Filter>Source Files\Model</Filter>
     </ClCompile>
-    <ClCompile Include="Spline.cpp">
-      <Filter>Source Files\Spline</Filter>
-    </ClCompile>
     <ClCompile Include="Player.cpp">
-      <Filter>Source Files\Player</Filter>
-    </ClCompile>
-    <ClCompile Include="Node.cpp">
-      <Filter>Source Files\Spline</Filter>
+      <Filter>Source Files\Characters</Filter>
     </ClCompile>
     <ClCompile Include="Gamepad.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LevelEditor.cpp">
+      <Filter>Source Files\Editors</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
+      <Filter>Source Files\Editors\SplineEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="Spline.cpp">
+      <Filter>Source Files\Editors\SplineEditor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -98,26 +104,8 @@
     <ClInclude Include="Skeleton.h">
       <Filter>Header Files\Model</Filter>
     </ClInclude>
-    <ClInclude Include="Line.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Spline.h">
-      <Filter>Header Files\Spline</Filter>
-    </ClInclude>
-    <ClInclude Include="Node.h">
-      <Filter>Header Files\Spline</Filter>
-    </ClInclude>
-    <ClInclude Include="LevelObject.h">
-      <Filter>Header Files\LevelEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="LevelSaver.h">
-      <Filter>Header Files\LevelEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="Level.h">
-      <Filter>Header Files\LevelEditor</Filter>
-    </ClInclude>
     <ClInclude Include="Player.h">
-      <Filter>Header Files\Player</Filter>
+      <Filter>Header Files\Characters</Filter>
     </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
@@ -127,6 +115,18 @@
     </ClInclude>
     <ClInclude Include="Gamepad.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LevelEditor.h">
+      <Filter>Header Files\Editors</Filter>
+    </ClInclude>
+    <ClInclude Include="Line.h">
+      <Filter>Header Files\Editors</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
+      <Filter>Header Files\Editors\SplineEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="Spline.h">
+      <Filter>Header Files\Editors\SplineEditor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

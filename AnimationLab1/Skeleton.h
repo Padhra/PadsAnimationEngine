@@ -15,100 +15,64 @@
 
 #include <vector>
 #include <map>
+#include <queue>
 
 #include "helper.h"
 #include "Bone.h"
 #include "Common.h"
 
+#include "Animation.h"
+
 class Model;
 
-struct PosKeyFrame
+struct Pose
 {
-	glm::vec3 position;
-	double time;
-};
-
-struct RotKeyFrame
-{
-	glm::quat rotation;
-	double time;
-};
-
-struct BoneAnimation
-{
-	int boneID;
-	std::vector<PosKeyFrame*> posKeyframes;
-	std::vector<RotKeyFrame*> rotKeyframes;
-};
-
-struct Animation {
-
-	int animationID;
-
-	double localClock;
-	double duration;
-
-	std::vector<BoneAnimation*> boneAnimations;
-
+	glm::vec3 translation;
+	glm::quat orientation;
 	float weight;
-	bool frozen;
-	
-	Animation(int p_id, double p_duration)
-	{
-		animationID = p_id;
-		duration = p_duration;
-
-		localClock = 0.0;
-		weight = 0.0; //How much is it contributing to the pose?
-		frozen = true; //Is the clock running?
-	}
-
-	void Start()
-	{
-		localClock = 0.0;
-		weight = 1.0; 
-		frozen = false; 
-	}
-
-	void Stop()
-	{
-		localClock = 0.0;
-		weight = 0.0;
-		frozen = true; 
-	}
 };
 
-enum TransitionType { Smooth = 0, Frozen };
+enum TransitionType { Smooth = 0, Frozen, Immediate };
 
-struct WeightBlender
+struct AnimationCommand
 {
-	bool active;
+	Animation* animation;
+	float blendDuration;
+	TransitionType transitionType;
+};
+
+struct AnimationController
+{
+	bool isBlending;
+	
 	float blendTimer;
 	float blendDuration;
 
-	Animation* prev;
+	Animation* current;
 	Animation* next;
 
 	TransitionType transitionType;
 
-	WeightBlender()
+	std::queue<AnimationCommand> commandQueue; //FIFO
+
+	AnimationController()
 	{
-		active = false;
+		isBlending = false;
 		blendTimer = 0.0;
 		blendDuration = 0.0;
 
 		transitionType = TransitionType::Smooth;
 	}
 
-	void Start(Animation* p_prev, Animation* p_next, float p_blendDuration, TransitionType p_transitionType)
+	void StartBlend(Animation* p_prev, Animation* p_next, float p_blendDuration, TransitionType p_transitionType)
 	{
-		active = true;
+		isBlending = true;
 		transitionType = p_transitionType;
 		
-		prev = p_prev;
+		current = p_prev;
 
 		if(transitionType == TransitionType::Frozen)
-			prev->frozen = true; 
+			current->frozen = true; 
 		
 		next = p_next;
 
@@ -119,23 +83,30 @@ struct WeightBlender
 		blendDuration = p_blendDuration;
 	}
 
-	void Blend(double deltaTime)
+	void Update(double deltaTime)
 	{
-		blendTimer += deltaTime/1000;
-		float t = blendTimer / blendDuration;
-
-		next->weight = lerp(0.0f, 1.0f, t);
-		prev->weight = 1 - next->weight;
-
-		if(t >= 1)
+		if(isBlending)
 		{
-			next->weight = 1;
+			blendTimer += deltaTime/1000;
+			float t = blendTimer / blendDuration;
 
-			prev->Stop();
+			next->weight = lerp(0.0f, 1.0f, t);
+			current->weight = 1 - next->weight;
 
-			active = false;
-			blendTimer = 0.0;
-			blendDuration = 0.0;
+			if(t >= 1)
+			{
+				next->weight = 1;
+
+				current->Stop();
+
+				isBlending = false;
+				blendTimer = 0.0;
+				blendDuration = 0.0;
+			}
+		}
+		else
+		{
+
 		}
 	}
 };
@@ -145,13 +116,14 @@ class Skeleton
 	private:
 		
 		Model* model;
-		WeightBlender blender;
+		AnimationController animationController;
 
 		std::map<int, Bone*> bones;
 		std::map<std::string, int> boneNameToID;
 		std::vector<std::string> bonesAdded;
 
 		std::vector<Animation*> animations;
+
 		int currentAnimationIndex;
 
 	public:
@@ -169,6 +141,7 @@ class Skeleton
 
 		bool ImportAssimpBoneHierarchy(const aiScene* scene, aiNode* aiBone, Bone* parent, bool print = true);
 		void Animate(double deltaTime);
+		std::map<int, std::vector<Pose>> SampleKeyframes();
 
 		//void Control(bool *keyStates);
 		
@@ -192,36 +165,32 @@ class Skeleton
 
 		Bone* GetRootBone() { return root; }
 
-		//Setters
-		//void SetAnimDuration(double pAnimationDuration) { animationDuration = pAnimationDuration; }
+		void PrintOuts(int winw, int winh);
 
-		void SetAnimationImmediate(int index) 
+		void SetAnimation(int index, float blendDuration = 0, TransitionType transitionType = TransitionType::Immediate) //blendMode smooth
 		{ 
 			if(index < animations.size()) 
 			{
-				if(currentAnimationIndex != -1)
+				if(transitionType == TransitionType::Immediate)
+				{
+					if(currentAnimationIndex != -1)
 					animations[currentAnimationIndex]->Stop();
 
-				animations[index]->Start();
+					animations[index]->Start();
 				
-				currentAnimationIndex = index;
+					currentAnimationIndex = index;
+				}
+				else
+				{
+					if(currentAnimationIndex == -1)
+						return; //Need an animation to blend from!
+
+					animationController.StartBlend(animations[currentAnimationIndex], animations[index], blendDuration, transitionType);
+				
+					currentAnimationIndex = index;
+				}
 			}
 		}
-
-		void SetAnimationGradual(int index, float blendDuration) //blendMode frozen by default
-		{ 
-			if(index < animations.size()) 
-			{
-				if(currentAnimationIndex == -1)
-					return; //Need an animation to blend from!
-
-				blender.Start(animations[currentAnimationIndex], animations[index], blendDuration, TransitionType::Frozen);
-				
-				currentAnimationIndex = index;
-			}
-		}
-
-		void PrintOuts(int winw, int winh);
 };
 
 #endif

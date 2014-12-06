@@ -43,6 +43,9 @@
     <Filter Include="Source Files\Editors\SplineEditor">
       <UniqueIdentifier>{a3738fb6-380c-444e-8fae-3bf6c604401f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Model\Animation">
+      <UniqueIdentifier>{3863296c-e37c-4575-bf17-c06f7141a19a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -127,6 +130,12 @@
     </ClInclude>
     <ClInclude Include="Spline.h">
       <Filter>Header Files\Editors\SplineEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Header Files\Model\Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

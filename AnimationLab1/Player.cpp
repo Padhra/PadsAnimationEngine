@@ -35,10 +35,13 @@ void Player::ProcessKeyboardOnce(unsigned char key, int x, int y)
 	//Animation one shots
 
 	if(key == KEY::KEY_k)
-		model->GetSkeleton()->SetAnimationImmediate(0);
+		model->GetSkeleton()->SetAnimation(0);
 
 	if(key == KEY::KEY_j)
-		model->GetSkeleton()->SetAnimationGradual(1, 50);
+		model->GetSkeleton()->SetAnimation(1, 1, TransitionType::Frozen);
+
+	if(key == KEY::KEY_b)
+		model->GetSkeleton()->SetAnimation(1, 1, TransitionType::Smooth);
 }
 
 void Player::Update(double deltaTime)

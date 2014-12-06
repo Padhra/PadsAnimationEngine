@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Keys.h"
+#include <iomanip>
 
 Player::Player(vector<Model*> &objectList, Camera* camera, Model* model)
 {
@@ -17,6 +18,15 @@ Player::Player(vector<Model*> &objectList, Camera* camera, Model* model)
 	speedScalar = .005f;
 
 	oldForward = camera->viewProperties.forward;
+
+	LoadAnimation("Animations/fight.dae");
+	LoadAnimation("Models/sora.dae"); 
+	LoadAnimation("Animations/twirl.dae"); 
+
+	skeleton = model->GetSkeleton();
+
+	state = State::idle;
+	skeleton->AddToAnimationQueue(0);
 }
 
 void Player::ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
@@ -26,6 +36,11 @@ void Player::ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
 		if(keyStates[KEY::KEY_w] || keyStates[KEY::KEY_W])
 		{
 			Move(deltaTime);
+			SetState(State::run);
+		}
+		else if(state < State::twirl) //i.e. not a oneshot
+		{
+			SetState(State::idle);
 		}
 	}	
 }
@@ -33,20 +48,33 @@ void Player::ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
 void Player::ProcessKeyboardOnce(unsigned char key, int x, int y)
 {
 	//Animation one shots
-
-	if(key == KEY::KEY_k)
-		model->GetSkeleton()->SetAnimation(0);
-
-	if(key == KEY::KEY_j)
-		model->GetSkeleton()->SetAnimation(1, 6, TransitionType::Frozen);
-
-	if(key == KEY::KEY_b)
-		model->GetSkeleton()->SetAnimation(1, 6, TransitionType::Smooth);
+	if(key == KEY::KEY_r)
+	{
+		if(state != State::run)
+		{
+			SetState(State::twirl);
+		}
+	}
 }
 
 void Player::Update(double deltaTime)
 {
 
+}
+
+void Player::SetState(State newState)
+{
+	if(state != newState)
+	{
+		if(newState == State::run)
+			skeleton->AddToAnimationQueue(State::run, 0.05, TransitionType::Frozen);
+		else if(newState == State::idle)
+			skeleton->AddToAnimationQueue(State::idle, 1, TransitionType::Frozen);
+		else if(newState == State::twirl)
+			skeleton->AddToAnimationQueue(State::twirl, 1, TransitionType::Frozen);
+
+		state = newState;
+	}
 }
 
 void Player::Move(double deltaTime)
@@ -81,3 +109,27 @@ void Player::Move(double deltaTime)
 	oldForward = forwardXZ;
 }
 
+void Player::PrintOuts(int winw, int winh)
+{
+	//PRINT PLAYER
+
+	std::stringstream ss;
+	ss << "player.pos: (" << std::fixed << std::setprecision(PRECISION) << model->worldProperties.translation.x << ", " << model->worldProperties.translation.y 
+		<< ", " << model->worldProperties.translation.z << ")";
+	drawText(20,winh-100, ss.str().c_str());
+
+	glm::vec3 euler = glm::eulerAngles(glm::toQuat(model->worldProperties.orientation));
+	ss.str(std::string()); // clear
+	ss << "player.rot: (" << std::fixed << std::setprecision(PRECISION) << euler.x << ", " << euler.y << ", " << euler.z << ")";
+	drawText(20, winh-120, ss.str().c_str());
+
+	ss.str(std::string()); // clear
+	ss << "Current state: ";
+	if(state == State::idle)
+		ss << "Idle";
+	else if(state == State::run)
+		ss << "Run";
+	else if(state == State::twirl)
+		ss << "One-shot";
+	drawText(20, winh-140, ss.str().c_str());
+}

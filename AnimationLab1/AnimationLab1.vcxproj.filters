@@ -131,9 +131,6 @@
     <ClInclude Include="Spline.h">
       <Filter>Header Files\Editors\SplineEditor</Filter>
     </ClInclude>
-    <ClInclude Include="AnimationController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Animation.h">
       <Filter>Header Files\Model\Animation</Filter>
     </ClInclude>

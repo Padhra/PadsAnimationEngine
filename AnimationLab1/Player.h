@@ -6,6 +6,7 @@
 #include "Common.h"
 
 
+enum State { idle = 0, run, twirl };
 
 class Player 
 {
@@ -13,11 +14,14 @@ class Player
 		
 		//float xzSpeed;
 		//float lookAngle;
-
 		glm::vec3 oldForward;
 		float speedScalar;
 
+		int state;
+
 		Camera* camera;
+
+		Skeleton* skeleton;
 
 	public:
 
@@ -28,9 +32,13 @@ class Player
 
 		void Update(double deltaTime);
 
+		void SetState(State newState);
+
 		void Move(double deltaTime);
 		void LoadAnimation(const char* fileName) { model->GetSkeleton()->LoadAnimation(fileName); }
 
 		void ProcessKeyboardContinuous(bool* keyStates, double deltaTime);
 		void ProcessKeyboardOnce(unsigned char key, int x, int y);
+
+		void PrintOuts(int winw, int winh);
 };

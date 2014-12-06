@@ -17,6 +17,8 @@
 #include <map>
 #include <queue>
 
+#include <iostream>
+
 #include "helper.h"
 #include "Bone.h"
 #include "Common.h"
@@ -118,12 +120,11 @@ struct AnimationController
 
 					if(transitionType == TransitionType::Immediate)
 					{
-						if(current != 0)
-							current->Stop();
-						if(next != 0)
-							next->Stop();
-
-						commandQueue.empty();
+						//if(current != 0)
+							//current->Stop();
+						//if(next != 0)
+							//next->Stop();
+						//commandQueue.empty();
 
 						current = command.animation;
 						current->Start(1);
@@ -158,11 +159,11 @@ class Skeleton
 		std::map<std::string, int> boneNameToID;
 		std::vector<std::string> bonesAdded;
 
-		AnimationController animationController;
 		std::vector<Animation*> animations;
 
 	public:
 		Bone* root;
+		AnimationController animationController;
 
 		bool hasKeyframes;
 		std::map<std::string, std::vector<Bone*>> ikChains;
@@ -190,7 +191,7 @@ class Skeleton
 
 		bool LoadAnimation(const char* file_name);
 
-		void SetAnimation(int index, float blendDuration = 0, TransitionType transitionType = TransitionType::Immediate) //blendMode smooth
+		void AddToAnimationQueue(int index, float blendDuration = 0, TransitionType transitionType = TransitionType::Immediate)
 		{ 
 			if(index < animations.size()) 
 			{

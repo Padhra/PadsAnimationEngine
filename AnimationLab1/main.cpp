@@ -74,7 +74,7 @@ vector<Model*> objectList;
 LevelEditor* levelEditor;
 
 short editMode = 0;
-enum EditMode { levelEdit = 0 };
+enum EditMode { off = 0, levelEdit };
 
 Player* player;
 bool moveFix = false;
@@ -149,8 +149,7 @@ int main(int argc, char** argv)
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
 	player = new Player(objectList, &camera, new Model(glm::vec3(0,0,0), glm::toMat4(correctSora), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
-	player->LoadAnimation("Models/sora.dae"); 
-	player->LoadAnimation("Animations/fight.dae"); 
+	 
 
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/arenaplanet.dae", shaderManager.GetShaderProgramID("diffuse")));
 
@@ -347,7 +346,7 @@ void keyPressed (unsigned char key, int x, int y)
 {  
 	keyStates[key] = true; // Set the state of the current key to pressed  
 
-	if(key == KEY::KEY_L)
+	if(key == KEY::KEY_L || key == KEY::KEY_l)
 		editMode = EditMode::levelEdit;
 
 	camera.ProcessKeyboardOnce(key, x, y);
@@ -520,8 +519,6 @@ void printouts()
 	}
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
 
-	
-
 	ss.str(std::string()); // clear
 	ss << fps << " fps ";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-60, ss.str().c_str());
@@ -546,22 +543,17 @@ void printouts()
 	ss << "camera.up: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.up.x << ", " << camera.viewProperties.up.y << ", " << camera.viewProperties.up.z << ")";
 	drawText(20,WINDOW_HEIGHT-60, ss.str().c_str());
 
-	//PRINT PLAYER
-	ss.str(std::string()); // clear
-	ss << "player.pos: (" << std::fixed << std::setprecision(PRECISION) << player->model->worldProperties.translation.x << ", " << player->model->worldProperties.translation.y 
-		<< ", " << player->model->worldProperties.translation.z << ")";
-	drawText(20,WINDOW_HEIGHT-100, ss.str().c_str());
-
-	glm::vec3 euler = glm::eulerAngles(glm::toQuat(player->model->worldProperties.orientation));
-	ss.str(std::string()); // clear
-	ss << "player.rot: (" << std::fixed << std::setprecision(PRECISION) << euler.x << ", " << euler.y << ", " << euler.z << ")";
-	drawText(20,WINDOW_HEIGHT-120, ss.str().c_str());
+	
 
 	//PRINT ANIMATION TIMER
 	//TODO - selected model
 	if(player != nullptr)
+	{
+		player->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
+
 		if(player->model->GetSkeleton()->hasKeyframes)
 			player->model->GetSkeleton()->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
+	}
 
 	if(editMode == EditMode::levelEdit)
 		levelEditor->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);

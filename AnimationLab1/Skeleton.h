@@ -41,14 +41,16 @@ struct AnimationCommand
 	Animation* animation;
 	float blendDuration;
 	TransitionType transitionType;
+	bool loop;
 
 	AnimationCommand()
 	{
 	}
 
-	AnimationCommand(Animation* animation, float blendDuration, TransitionType transitionType)
+	AnimationCommand(Animation* animation, bool loop, float blendDuration, TransitionType transitionType)
 	{
 		this->animation = animation;
+		this->loop = loop;
 		this->blendDuration = blendDuration;
 		this->transitionType = transitionType;
 	}
@@ -127,7 +129,7 @@ struct AnimationController
 						//commandQueue.empty();
 
 						current = command.animation;
-						current->Start(1);
+						current->Start(1, command.loop);
 					}
 					else
 					{
@@ -137,7 +139,7 @@ struct AnimationController
 								current->frozen = true; 
 		
 							next = command.animation;
-							next->Start(0);
+							next->Start(0, command.loop);
 
 							blendDuration = command.blendDuration;
 							isBlending = true;
@@ -191,11 +193,11 @@ class Skeleton
 
 		bool LoadAnimation(const char* file_name);
 
-		void AddToAnimationQueue(int index, float blendDuration = 0, TransitionType transitionType = TransitionType::Immediate)
+		void AddToAnimationQueue(int index, bool loop = true, float blendDuration = 0, TransitionType transitionType = TransitionType::Immediate)
 		{ 
 			if(index < animations.size()) 
 			{
-				AnimationCommand command = AnimationCommand(animations[index], blendDuration, transitionType);
+				AnimationCommand command = AnimationCommand(animations[index], loop, blendDuration, transitionType);
 				animationController.commandQueue.push(command);
 			}
 		}

@@ -40,6 +40,8 @@ struct Animation {
 
 	float weight;
 	bool frozen;
+
+	bool loop;
 	
 	Animation(std::string name, int id, double duration)
 	{
@@ -52,11 +54,12 @@ struct Animation {
 		frozen = true; //Is the clock running?
 	}
 
-	void Start(float weight)
+	void Start(float weight, bool loop)
 	{
 		localClock = 0.0;
 		this->weight = weight; 
 		frozen = false; 
+		this->loop = loop;
 	}
 
 	void Stop()

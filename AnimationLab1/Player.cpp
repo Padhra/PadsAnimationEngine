@@ -67,11 +67,11 @@ void Player::SetState(State newState)
 	if(state != newState)
 	{
 		if(newState == State::run)
-			skeleton->AddToAnimationQueue(State::run, 0.05, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::run, true, 0.05, TransitionType::Frozen);
 		else if(newState == State::idle)
-			skeleton->AddToAnimationQueue(State::idle, 1, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::idle, true, 1, TransitionType::Frozen);
 		else if(newState == State::twirl)
-			skeleton->AddToAnimationQueue(State::twirl, 1, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::twirl, false, 1, TransitionType::Frozen);
 
 		state = newState;
 	}

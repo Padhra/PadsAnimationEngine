@@ -150,7 +150,12 @@ void Skeleton::Animate(double deltaTime)
 			animation->localClock += deltaTime/1000;
 
 		if (animation->localClock >= animation->duration) 
+		{
+			if(!animation->loop)
+				animation->frozen;
+
 			animation->localClock = 0.0;
+		}
 	}
 
 	//Each bone has a vector of contributing poses

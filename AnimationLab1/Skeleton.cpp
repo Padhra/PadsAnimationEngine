@@ -8,10 +8,7 @@ float Skeleton::AnimationSpeedScalar = 1.0f;
 
 Skeleton::Skeleton(Model* p_myModel)
 {
-	currentAnimationIndex = -1;
-
 	hasKeyframes = false;
-
 	model = p_myModel; // for the model matrix
 }
 
@@ -400,7 +397,7 @@ bool Skeleton::LoadAnimation(const char* file_name)
 		printf ("animation duration %f\n", anim->mDuration);
 		printf ("ticks per second %f\n", anim->mTicksPerSecond);*/
 
-		Animation* animation = new Animation(animations.size(), anim->mDuration);
+		Animation* animation = new Animation(file_name, animations.size(), anim->mDuration);
 		///animationDuration = anim->mDuration;
 
 		//printf ("anim duration is %f\n", anim->mDuration);
@@ -477,17 +474,20 @@ bool Skeleton::LoadAnimation(const char* file_name)
 
 void Skeleton::PrintOuts(int winw, int winh)
 {
+	std::stringstream ss;
+	ss << "In queue: " << animationController.commandQueue.size();
+	drawText(20, 20, ss.str().c_str());
+
 	int amountActive = 0;
 
 	for(int i = 0; i < animations.size(); i++)
 	{
 		if(animations[i]->weight > 0)
 		{	
-			int offset = amountActive*100 + amountActive*20;
+			int offset = amountActive*120 + 40;
 			amountActive++;
 
 			std::stringstream ss;
-			ss.str(std::string()); // clear
 			ss << "AnimationID: " << animations[i]->animationID; 
 			drawText(20, 100 + offset, ss.str().c_str());
 
@@ -511,7 +511,7 @@ void Skeleton::PrintOuts(int winw, int winh)
 
 	if(animationController.isBlending)
 	{
-		int offset = amountActive*100 + amountActive*20;
+		int offset = amountActive*120 + 40;
 
 		std::stringstream ss;
 		ss.str(std::string()); // clear

@@ -39,6 +39,17 @@ struct AnimationCommand
 	Animation* animation;
 	float blendDuration;
 	TransitionType transitionType;
+
+	AnimationCommand()
+	{
+	}
+
+	AnimationCommand(Animation* animation, float blendDuration, TransitionType transitionType)
+	{
+		this->animation = animation;
+		this->blendDuration = blendDuration;
+		this->transitionType = transitionType;
+	}
 };
 
 struct AnimationController
@@ -61,31 +72,22 @@ struct AnimationController
 		blendTimer = 0.0;
 		blendDuration = 0.0;
 
+		current = 0;
+		next = 0;
+
 		transitionType = TransitionType::Smooth;
 	}
 
-	void StartBlend(Animation* p_prev, Animation* p_next, float p_blendDuration, TransitionType p_transitionType)
+	void Reset()
 	{
-		isBlending = true;
-		transitionType = p_transitionType;
-		
-		current = p_prev;
-
-		if(transitionType == TransitionType::Frozen)
-			current->frozen = true; 
-		
-		next = p_next;
-
-		next->frozen = false;
-		next->localClock = 0.0;
-		next->weight = 0;
-
-		blendDuration = p_blendDuration;
+		isBlending = false;
+		blendTimer = 0.0;
+		blendDuration = 0.0;
 	}
 
 	void Update(double deltaTime)
 	{
-		if(isBlending)
+		if(isBlending) //If blending do that
 		{
 			blendTimer += deltaTime/1000;
 			float t = blendTimer / blendDuration;
@@ -95,18 +97,53 @@ struct AnimationController
 
 			if(t >= 1)
 			{
-				next->weight = 1;
-
+				next->weight = 1; //could be a little higher than 1
 				current->Stop();
+				
+				current = next;
 
-				isBlending = false;
-				blendTimer = 0.0;
-				blendDuration = 0.0;
+				Reset();
 			}
 		}
-		else
+		else //otherwise pop an animation off the command queue, if there is something in it
 		{
+			if(commandQueue.size() > 0)
+			{
+				AnimationCommand command = commandQueue.front();
+				commandQueue.pop();
 
+				if(command.animation != current)
+				{
+					transitionType = command.transitionType;
+
+					if(transitionType == TransitionType::Immediate)
+					{
+						if(current != 0)
+							current->Stop();
+						if(next != 0)
+							next->Stop();
+
+						commandQueue.empty();
+
+						current = command.animation;
+						current->Start(1);
+					}
+					else
+					{
+						if(current != 0)
+						{
+							if(transitionType == TransitionType::Frozen)
+								current->frozen = true; 
+		
+							next = command.animation;
+							next->Start(0);
+
+							blendDuration = command.blendDuration;
+							isBlending = true;
+						}
+					}
+				}
+			}
 		}
 	}
 };
@@ -116,22 +153,19 @@ class Skeleton
 	private:
 		
 		Model* model;
-		AnimationController animationController;
-
+		
 		std::map<int, Bone*> bones;
 		std::map<std::string, int> boneNameToID;
 		std::vector<std::string> bonesAdded;
 
+		AnimationController animationController;
 		std::vector<Animation*> animations;
-
-		int currentAnimationIndex;
 
 	public:
 		Bone* root;
 
 		bool hasKeyframes;
 		std::map<std::string, std::vector<Bone*>> ikChains;
-		GLuint line_vao;
 
 		static bool ConstraintsEnabled;
 		static float AnimationSpeedScalar;
@@ -156,6 +190,17 @@ class Skeleton
 
 		bool LoadAnimation(const char* file_name);
 
+		void SetAnimation(int index, float blendDuration = 0, TransitionType transitionType = TransitionType::Immediate) //blendMode smooth
+		{ 
+			if(index < animations.size()) 
+			{
+				AnimationCommand command = AnimationCommand(animations[index], blendDuration, transitionType);
+				animationController.commandQueue.push(command);
+			}
+		}
+
+		void PrintOuts(int winw, int winh);
+
 		//Getters
 		std::map<int, Bone*> GetBones() { return bones; }
 		
@@ -165,32 +210,6 @@ class Skeleton
 
 		Bone* GetRootBone() { return root; }
 
-		void PrintOuts(int winw, int winh);
-
-		void SetAnimation(int index, float blendDuration = 0, TransitionType transitionType = TransitionType::Immediate) //blendMode smooth
-		{ 
-			if(index < animations.size()) 
-			{
-				if(transitionType == TransitionType::Immediate)
-				{
-					if(currentAnimationIndex != -1)
-					animations[currentAnimationIndex]->Stop();
-
-					animations[index]->Start();
-				
-					currentAnimationIndex = index;
-				}
-				else
-				{
-					if(currentAnimationIndex == -1)
-						return; //Need an animation to blend from!
-
-					animationController.StartBlend(animations[currentAnimationIndex], animations[index], blendDuration, transitionType);
-				
-					currentAnimationIndex = index;
-				}
-			}
-		}
 };
 
 #endif

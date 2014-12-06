@@ -31,6 +31,7 @@ struct BoneAnimationData
 struct Animation {
 
 	int animationID;
+	std::string name;
 
 	double localClock;
 	double duration;
@@ -40,20 +41,21 @@ struct Animation {
 	float weight;
 	bool frozen;
 	
-	Animation(int p_id, double p_duration)
+	Animation(std::string name, int id, double duration)
 	{
-		animationID = p_id;
-		duration = p_duration;
+		this->name = name;
+		animationID = id;
+		this->duration = duration;
 
 		localClock = 0.0;
 		weight = 0.0; //How much is it contributing to the pose?
 		frozen = true; //Is the clock running?
 	}
 
-	void Start()
+	void Start(float weight)
 	{
 		localClock = 0.0;
-		weight = 1.0; 
+		this->weight = weight; 
 		frozen = false; 
 	}
 

@@ -38,10 +38,10 @@ void Player::ProcessKeyboardOnce(unsigned char key, int x, int y)
 		model->GetSkeleton()->SetAnimation(0);
 
 	if(key == KEY::KEY_j)
-		model->GetSkeleton()->SetAnimation(1, 1, TransitionType::Frozen);
+		model->GetSkeleton()->SetAnimation(1, 6, TransitionType::Frozen);
 
 	if(key == KEY::KEY_b)
-		model->GetSkeleton()->SetAnimation(1, 1, TransitionType::Smooth);
+		model->GetSkeleton()->SetAnimation(1, 6, TransitionType::Smooth);
 }
 
 void Player::Update(double deltaTime)

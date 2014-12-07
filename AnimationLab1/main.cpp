@@ -15,6 +15,7 @@
 #include "Node.h"
 #include "LevelEditor.h"
 #include "Player.h"
+#include "NPC.h"
 
 #include "Common.h"
 #include "Keys.h"
@@ -78,6 +79,8 @@ enum EditMode { off = 0, levelEdit };
 
 Player* player;
 bool moveFix = false;
+
+NPC* donald;
 
 int main(int argc, char** argv)
 {
@@ -149,12 +152,9 @@ int main(int argc, char** argv)
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
 	player = new Player(objectList, &camera, new Model(glm::vec3(0,0,0), glm::toMat4(correctSora), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
-	 
+	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::toMat4(correctSora), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned")), player);
 
-	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/arenaplanet.dae", shaderManager.GetShaderProgramID("diffuse")));
-
-	//objectList[objectList.size()-1]->GetSkeleton()->LoadAnimation("Animations/fight.dae");
-	//objectList[objectList.size()-1]->GetSkeleton()->SetAnimation(1);
+	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/destinyisland.dae", shaderManager.GetShaderProgramID("diffuse")));
 
 	#pragma region IK Stuff
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
@@ -226,6 +226,8 @@ void update()
 	}
 
 	camera.Update(deltaTime);
+	player->Update(deltaTime);
+	donald->Update(deltaTime);
 
 	if(!moveFix)
 	{
@@ -264,6 +266,7 @@ void update()
 		//	if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
 		//		objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
 		//																											//if no target do nothing?
+
 			if(objectList[i]->GetSkeleton()->hasKeyframes)
 				objectList[i]->GetSkeleton()->Animate(deltaTime); //this overwrites control above
 			
@@ -351,6 +354,7 @@ void keyPressed (unsigned char key, int x, int y)
 
 	camera.ProcessKeyboardOnce(key, x, y);
 	player->ProcessKeyboardOnce(key, x, y);
+	donald->ProcessKeyboardOnce(key, x, y);
 	
 	if(editMode == levelEdit)
 	{

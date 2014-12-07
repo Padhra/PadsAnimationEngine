@@ -51,6 +51,7 @@ struct AnimationCommand
 	{
 		this->animation = animation;
 		this->loop = loop;
+		
 		this->blendDuration = blendDuration;
 		this->transitionType = transitionType;
 	}
@@ -59,6 +60,7 @@ struct AnimationCommand
 struct AnimationController
 {
 	bool isBlending;
+	bool isIdle;
 	
 	float blendTimer;
 	float blendDuration;
@@ -82,7 +84,7 @@ struct AnimationController
 		transitionType = TransitionType::Smooth;
 	}
 
-	void Reset()
+	void ResetBlender()
 	{
 		isBlending = false;
 		blendTimer = 0.0;
@@ -91,6 +93,8 @@ struct AnimationController
 
 	void Update(double deltaTime)
 	{
+		isIdle = false;
+
 		if(isBlending) //If blending do that
 		{
 			blendTimer += deltaTime/1000;
@@ -101,16 +105,15 @@ struct AnimationController
 
 			if(t >= 1)
 			{
-				next->weight = 1; //could be a little higher than 1
+				next->weight = 1; //clamp
 				current->Stop();
-				
 				current = next;
 
-				Reset();
+				ResetBlender();
 			}
 		}
-		else //otherwise pop an animation off the command queue, if there is something in it
-		{
+		else 
+		{   //otherwise pop an animation off the command queue, if there is something in it
 			if(commandQueue.size() > 0)
 			{
 				AnimationCommand command = commandQueue.front();
@@ -146,6 +149,12 @@ struct AnimationController
 						}
 					}
 				}
+			}
+			else //If there's nothing in the queue
+			{
+				if(current != 0)
+					if(current->weight == 0) //And the current animation is stopped
+						isIdle = true; //I'm Idle!
 			}
 		}
 	}

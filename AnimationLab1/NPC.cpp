@@ -1,7 +1,7 @@
 #include "NPC.h"
 #include "Keys.h"
 
-NPC::NPC(vector<Model*> &objectList, Model* model)
+NPC::NPC(vector<Model*> &objectList, Model* model, Player* player)
 {
 	this->model = model;
 	objectList.push_back(model);
@@ -9,40 +9,67 @@ NPC::NPC(vector<Model*> &objectList, Model* model)
 	model->serialise = false;
 
 	LoadAnimation("Animations/fight.dae");
-	LoadAnimation("Models/sora.dae"); 
 	LoadAnimation("Animations/twirl.dae"); 
+	LoadAnimation("Models/sora.dae"); 
 
 	skeleton = model->GetSkeleton();
 
-	state = State::idle;
-	skeleton->AddToAnimationQueue(0);
+	state = NPCns::State::idle;
+	skeleton->AddToAnimationQueue(NPCns::State::idle);
+
+	this->player = player;
+
+	this->threshold = 3;
+
+	haveAcknowledged = false;
+	playerInRadius = false;
+}
+
+void NPC::ProcessKeyboardOnce(unsigned char key, int x, int y)
+{
+	if(key == KEY::KEY_v)
+	{
+		if(playerInRadius)
+		{
+			SetState(NPCns::State::talk);
+		}
+	}
 }
 
 void NPC::Update(double deltaTime)
 {
-	//if player in radius
-	//{
-	//	playerInRadius = true;
-	//
-	//	if haveAcknoledged == false
-	//		SetState(wave);
-	//		haveAckniledged = true
-	//
-	//
-	//if player leave radius
-	//
-	//
-	//
-	//
-		//if 
+	if(skeleton->animationController.isIdle)
+		SetState(NPCns::State::idle);
+
+	if(glm::distance(model->worldProperties.translation, player->model->worldProperties.translation) < threshold)
+	{
+		playerInRadius = true;
+
+		if(!haveAcknowledged)
+		{
+			SetState(NPCns::State::wave);
+			haveAcknowledged = true;
+		}
+	}
+	else
+	{
+		playerInRadius = false;
+		haveAcknowledged = false;
+
+		SetState(NPCns::State::idle);
+	}
 }
 
-void NPC::SetState(State newState)
+void NPC::SetState(NPCns::State newState)
 {
 	if(state != newState)
 	{
-		//if set state wave
-		//	play one shot
+		if(newState == NPCns::State::wave)
+			skeleton->AddToAnimationQueue(NPCns::State::wave, false, 1, TransitionType::Frozen);
+		else if(newState == NPCns::State::idle)
+			skeleton->AddToAnimationQueue(NPCns::State::idle, true, 1, TransitionType::Frozen);
+		else if(newState == NPCns::State::talk)
+			skeleton->AddToAnimationQueue(NPCns::State::talk, true, 1, TransitionType::Frozen);
 
 		state = newState;
 	}

@@ -59,7 +59,10 @@ void Player::ProcessKeyboardOnce(unsigned char key, int x, int y)
 
 void Player::Update(double deltaTime)
 {
-
+	if(skeleton->animationController.isIdle)
+	{
+		SetState(State::idle);
+	}
 }
 
 void Player::SetState(State newState)

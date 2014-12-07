@@ -71,6 +71,9 @@ class LevelEditor // This class serialise the level / loads the level and create
 					outfile << q[3] << "\n";
 
 					outfile << wp.scale.x;
+
+					if(i != objects.size()-1)
+						outfile << "\n";
 				}
 			}
 

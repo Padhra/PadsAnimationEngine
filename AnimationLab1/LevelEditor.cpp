@@ -11,7 +11,7 @@ LevelEditor::LevelEditor(vector<Model*> *objectList)
 	
 	translationSpeed = 0.01f; 
 	rotationSpeed = 0.01f;
-	scaleSpeed = 0.000001f;
+	scaleSpeed = 0.001f;
 
 	this->objectList = objectList;
 

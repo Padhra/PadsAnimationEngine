@@ -152,7 +152,7 @@ void Skeleton::Animate(double deltaTime)
 		if (animation->localClock >= animation->duration) 
 		{
 			if(!animation->loop)
-				animation->frozen;
+				animation->Stop();
 
 			animation->localClock = 0.0;
 		}
@@ -178,7 +178,7 @@ void Skeleton::Animate(double deltaTime)
 			glm::mat4 orientation = glm::toMat4(glm::slerp(contributingPoses[boneIdx][0].orientation, 
 				contributingPoses[boneIdx][1].orientation, contributingPoses[boneIdx][1].weight));
 
-			bones[boneIdx]->transform = translation * orientation;
+			bones[boneIdx]->transform = translation * orientation; 
 		}
 	}
 }

@@ -16,10 +16,9 @@ class Spline
 		std::vector<Node*> nodes;
 
 		double timer; //in seconds
-		static float speedScalar;
-
 		int currentNode;
 
+		static float speedScalar;
 		short mode; // 0 = Linear, 1 = cubic
 
 		Spline()
@@ -27,6 +26,7 @@ class Spline
 			mode = InterpolationMode::Cubic;
 
 			currentNode = 0;
+			timer = 0;
 		}
 
 		void SetMode(short mode) { this->mode = mode;}
@@ -35,13 +35,7 @@ class Spline
 
 		glm::vec3 GetPosition()
 		{
-			if(timer >= 1.0)
-			{
-				currentNode++;
-				timer = 0;
-			}
-			
-			float t = timer / 1.0; 
+			float t = timer; 
 
 			if(mode == InterpolationMode::Cubic)
 			{
@@ -60,14 +54,35 @@ class Spline
 			nodes.push_back(node);
 		}
 
+		void DeleteAllNodes() 
+		{
+			int size = nodes.size();
+			for(int i = 0; i < size; i++)
+			{
+				Node* node = *(nodes.begin());
+
+				//if visible
+				Node::objectList->erase(std::remove(Node::objectList->begin(), Node::objectList->end(), node->marker), Node::objectList->end());
+				
+				DeleteNode(node);
+			}
+		}
+
 		void DeleteNode(Node* node) 
 		{
+			delete node;
 			nodes.erase(std::remove(nodes.begin(), nodes.end(), node), nodes.end());
 		}
 
 		void Update(double deltaTime)
 		{
 			timer += deltaTime/1000 * speedScalar;
+
+			if(timer >= 1.0)
+			{
+				currentNode++;
+				timer = 0;
+			}
 		}
 
 		void Save(int selectedFile)
@@ -92,11 +107,12 @@ class Spline
 			}
 		}
 
-		void Load(int selectedFile)
+		void Load(int selectedFile, bool debug = true)
 		{
 			//nodes.erase(nodes.begin(), nodes.begin() + nodes.size());
 			//nodes.clear();
 			//nodes.erase( nodes.begin(), nodes.end() );
+			DeleteAllNodes();
 
 			ifstream infile;
 
@@ -114,7 +130,7 @@ class Spline
 					v[i] = std::stoi(s);
 				}
 
-				AddNode(new Node(v));
+				AddNode(new Node(v, debug));
 			}
           
 			infile.close();

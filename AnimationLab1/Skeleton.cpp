@@ -128,7 +128,7 @@ void Skeleton::UpdateGlobalTransforms(Bone* bone, glm::mat4 parentTransform)
 {	
 	bone->globalTransform = parentTransform * bone->transform;
 	
-	bone->finalTransform = bone->globalTransform * bone->offset;
+	bone->finalTransform = /*model->globalInverseTransform **/ bone->globalTransform * bone->offset;
 
 	for (int i = 0; i < bone->children.size(); i++) 
 		UpdateGlobalTransforms (bone->children[i], bone->globalTransform); 

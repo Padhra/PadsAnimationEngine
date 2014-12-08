@@ -8,3 +8,13 @@ diffuse
 0.00939601
 -0.340126
 0.005
+Models/destinyisland.dae
+diffuse
+0
+0
+0
+0.70797
+0
+0
+0.706242
+0.29

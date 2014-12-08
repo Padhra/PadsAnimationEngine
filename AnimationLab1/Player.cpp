@@ -13,11 +13,13 @@ Player::Player(vector<Model*> &objectList, Camera* camera, Model* model)
 	camera->SetTarget(model->worldProperties.translation);
 
 	//xzSpeed = 0;
-	//lookAngle / rotation
+	lookAngle = 0;
 
 	speedScalar = .005f;
 
-	oldForward = camera->viewProperties.forward;
+	glm::vec3 forwardXZ = camera->viewProperties.forward;
+	forwardXZ.y = 0;
+	oldForward = glm::normalize(forwardXZ);
 
 	LoadAnimation("Animations/fight.dae");
 	LoadAnimation("Models/sora.dae"); 
@@ -31,7 +33,7 @@ Player::Player(vector<Model*> &objectList, Camera* camera, Model* model)
 
 void Player::ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
 {
-	if(!camera->flycam)
+	if(camera->mode == CameraMode::tp)
 	{
 		if(keyStates[KEY::KEY_w] || keyStates[KEY::KEY_W])
 		{
@@ -82,34 +84,14 @@ void Player::SetState(State newState)
 
 void Player::Move(double deltaTime)
 {
-	//TODO - make better
-	//theMovementDirection = Quaternion.Euler(0, lookAngle, 0) * new Vector3(horizontalInput, 0, verticalInput);
-    //theMovementDirection = theMovementDirection.normalized;
-
-	//theMovementOffset = theMovementDirection * movementSpeed;
-    //transform.LookAt(transform.position + theMovementOffset);
-
 	glm::vec3 forwardXZ = camera->viewProperties.forward;
 	forwardXZ.y = 0;
 	forwardXZ = glm::normalize(forwardXZ);
-
 	model->worldProperties.translation += forwardXZ * float(deltaTime) * speedScalar;
+	
 	camera->SetTarget(model->worldProperties.translation);
 
-	double cosAngle = glm::dot(forwardXZ, oldForward);
-	float turnAngle = glm::degrees(glm::acos(cosAngle));
-
-	if(cosAngle < 0.9999f) 
-	{
-		glm::vec3 rotationAxis = glm::normalize(glm::cross(oldForward, forwardXZ));
-
-		if(rotationAxis.y < 0)
-			turnAngle = -turnAngle;
-
-		model->worldProperties.orientation *= glm::rotate(glm::mat4(1), turnAngle, glm::vec3(0,0,1));
-	}
-
-	oldForward = forwardXZ;
+	model->worldProperties.orientation = glm::toMat4(glm::inverse(camera->viewProperties.rotation));
 }
 
 void Player::PrintOuts(int winw, int winh)
@@ -127,6 +109,11 @@ void Player::PrintOuts(int winw, int winh)
 	drawText(20, winh-120, ss.str().c_str());
 
 	ss.str(std::string()); // clear
+	glm::vec3 forward = model->GetForward();
+	ss << "player.forward: (" << std::fixed << std::setprecision(PRECISION) << forward.x << ", " << forward.y << ", " << forward.z << ")";
+	drawText(20, winh-140, ss.str().c_str());
+	
+	ss.str(std::string()); // clear
 	ss << "Current state: ";
 	if(state == State::idle)
 		ss << "Idle";
@@ -134,5 +121,5 @@ void Player::PrintOuts(int winw, int winh)
 		ss << "Run";
 	else if(state == State::twirl)
 		ss << "One-shot";
-	drawText(20, winh-140, ss.str().c_str());
+	drawText(20, winh-160, ss.str().c_str());
 }

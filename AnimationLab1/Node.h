@@ -2,36 +2,49 @@
 
 #include <glm\glm.hpp>
 #include <vector>
+
 #include "Helper.h"
 #include "Model.h"
 #include "ShaderManager.h"
-
-#define BOX "Models/cubeTri.obj" //TODO - move definitions to a common.h
+#include "Common.h"
 
 class Node
 {
 	private:
-
+		//glm::vec3 position;
+		
 	public:
+
+		Model* marker;
 
 		//For creating the box 
 		static vector<Model*>* objectList;
-		
-		Model* box;
 
-		Node(glm::vec3 position) 
+		Node(glm::vec3 position, bool debug = true) 
 		{
-			box = new Model(position, glm::mat4(1), glm::vec3(.03f), BOX, ShaderManager::Instance->GetShaderProgramID("diffuse"));
-			objectList->push_back(box);
+			//this->position = position;
+			marker = new Model(position, glm::mat4(1), glm::vec3(.03f), BOX, ShaderManager::Instance->GetShaderProgramID("black"), false, true);
+			
+			if(debug)
+				objectList->push_back(marker);
 		};
 
 		~Node()
 		{
-			//delete box; //Clean this up in model ?
+			delete marker;
 		}
 
 		glm::vec3 GetPosition()
 		{
-			return box->worldProperties.translation;
+			//return position;
+			return marker->worldProperties.translation;
+		}
+
+		void SetPosition(glm::vec3 pos)
+		{
+			//position = pos;
+
+			//if display
+			marker->worldProperties.translation = pos;
 		}
 };

@@ -140,6 +140,9 @@
     <ClInclude Include="NPC.h">
       <Filter>Header Files\Characters</Filter>
     </ClInclude>
+    <ClInclude Include="SplineEditor.h">
+      <Filter>Header Files\Editors\SplineEditor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\diffuse.ps">
@@ -152,6 +155,18 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Shaders\skinned.ps">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\node.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\white.ps">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\red.ps">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Shaders\black.ps">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

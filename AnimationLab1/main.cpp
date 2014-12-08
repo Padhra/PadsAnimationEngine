@@ -16,6 +16,7 @@
 #include "LevelEditor.h"
 #include "Player.h"
 #include "NPC.h"
+#include "SplineEditor.h"
 
 #include "Common.h"
 #include "Keys.h"
@@ -72,15 +73,21 @@ int frames = 0;
 
 ShaderManager shaderManager;
 vector<Model*> objectList;
+
 LevelEditor* levelEditor;
+SplineEditor* splineEditor;
 
 short editMode = 0;
-enum EditMode { off = 0, levelEdit };
+enum EditMode { off = 0, levelEdit, splineEdit };
 
 Player* player;
 bool moveFix = false;
 
 NPC* donald;
+
+bool printText = false;
+
+Spline spline0;
 
 int main(int argc, char** argv)
 {
@@ -122,7 +129,7 @@ int main(int argc, char** argv)
     }
 	#pragma endregion 
 
-	glClearColor(0.1,0.1,0.1,1);
+	glClearColor(135.0/255.0, 206.0/255.0, 250.0/255.0, 1);
 	glEnable (GL_CULL_FACE); // cull face 
 	glCullFace (GL_BACK); // cull back face 
 	glFrontFace (GL_CCW); // GL_CCW for counter clock-wise
@@ -131,7 +138,7 @@ int main(int argc, char** argv)
 	projectionMatrix = glm::perspective(60.0f, (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f /*near plane*/, 100.f /*far plane*/); // Create our perspective projection matrix
 
 	//TODO - constructor for camera
-	camera.Init(glm::vec3(0.0f, 0.0f, 0.0f), 0.0002f, 0.005f, false); 
+	camera.Init(glm::vec3(0.0f, 0.0f, 0.0f), 0.0002f, 0.01f); 
 
 	levelEditor = new LevelEditor(&objectList);
 
@@ -140,19 +147,19 @@ int main(int argc, char** argv)
 	shaderManager.CreateShaderProgram("skinned", "Shaders/skinned.vs", "Shaders/skinned.ps");
 	shaderManager.CreateShaderProgram("diffuse", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
 
-	shaderManager.CreateShaderProgram("text", "Shaders/diffuse.vs", "Shaders/diffuse.ps");
+	shaderManager.CreateShaderProgram("black", "Shaders/diffuse.vs", "Shaders/black.ps");
+	shaderManager.CreateShaderProgram("white", "Shaders/diffuse.vs", "Shaders/white.ps");
+	shaderManager.CreateShaderProgram("red", "Shaders/diffuse.vs", "Shaders/red.ps");
+
+	shaderManager.CreateShaderProgram("text", "Shaders/diffuse.vs", "Shaders/black.ps");
 
 	Node::objectList = &objectList;
-
-	glm::quat correctSora = glm::quat();
-	correctSora *= glm::angleAxis(-90.0f, glm::vec3(1,0,0));
-	correctSora *= glm::angleAxis(-90.0f, glm::vec3(0,0,1));
 
 	vector<Model*> loadedObjects = LevelEditor::Load(1);
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
-	player = new Player(objectList, &camera, new Model(glm::vec3(0,0,0), glm::toMat4(correctSora), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
-	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::toMat4(correctSora), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned")), player);
+	player = new Player(objectList, &camera, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
+	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::mat4(1), glm::vec3(.1), "Models/don1.dae", shaderManager.GetShaderProgramID("skinned")), player);
 
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/destinyisland.dae", shaderManager.GetShaderProgramID("diffuse")));
 
@@ -203,6 +210,12 @@ int main(int argc, char** argv)
 	//targetPath.SetMode(InterpolationMode::Cubic);
 	#pragma endregion
 
+	splineEditor = new SplineEditor();
+	splineEditor->spline.SetMode(InterpolationMode::Cubic);
+
+	spline0.SetSpeed(0.5f);
+	spline0.Load(0, false);
+
 	glutMainLoop();
     
 	return 0;
@@ -227,45 +240,17 @@ void update()
 
 	camera.Update(deltaTime);
 	player->Update(deltaTime);
-	donald->Update(deltaTime);
-
-	if(!moveFix)
-	{
-		bool camMode = camera.flycam;
-		camera.flycam = false;
-		player->Move(deltaTime);
-		camera.flycam = camMode;
-		moveFix = true; 
-	}
+	donald->Update(deltaTime); //TODO - make a character class with functions for update / input etc.
 
 	//Animation
 	for(int i = 0; i< objectList.size(); i++)
 	{
 		if(objectList[i]->HasSkeleton())
 		{
-		//	//TODO - If animationMode == IK .. and so on
-			/*int numbones = objectList[i]->GetSkeleton()->GetBones().size();
-			int testAnimMod = testAnimBone % numbones;
-			Bone* bone = objectList[i]->GetSkeleton()->GetBones()[testAnimMod];
-
-			if(uiMode == UIMode::xAngle && isLeftKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(1,0,0));
-			else if(uiMode == UIMode::xAngle && isRightKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(-1,0,0));
-
-			if(uiMode == UIMode::yAngle && isLeftKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,1,0));
-			else if(uiMode == UIMode::yAngle && isRightKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,-1,0));
-
-			if(uiMode == UIMode::zAngle && isLeftKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,0,1));
-			else if(uiMode == UIMode::zAngle && isRightKeyPressed)
-				objectList[i]->GetSkeleton()->GetBones()[testAnimMod]->transform = glm::rotate(bone->transform, 5.0f, glm::vec3(0,0,-1));*/
-
-		//	if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
-		//		objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
-		//																											//if no target do nothing?
+			//TODO - If animationMode == IK .. and so on
+			//	if(objectList[i]->GetSkeleton()->ikChains.size() > 0)
+			//		objectList[i]->GetSkeleton()->ComputeIK("chain1", /*glm::vec3(0,5,0)*/target->worldProperties.translation, 50); //replace with iteration, ikchain should be a struct with a target?
+			//																											//if no target do nothing?
 
 			if(objectList[i]->GetSkeleton()->hasKeyframes)
 				objectList[i]->GetSkeleton()->Animate(deltaTime); //this overwrites control above
@@ -275,14 +260,28 @@ void update()
 	}
 
 	/*if(objectList.size() == 2)
-	{
-		objectList[0]->worldProperties.orientation *= glm::toMat4(glm::angleAxis(1.0f, glm::vec3(0,1,0)));
-	}*/
+		objectList[0]->worldProperties.orientation *= glm::toMat4(glm::angleAxis(1.0f, glm::vec3(0,1,0)));*/
 
 	//FOR ITERATING SUBCHAINS
 	//std::map<char,int>::iterator it;
 	//for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
 	//std::cout << it->first << " => " << it->second << '\n';
+
+	if(editMode == EditMode::splineEdit)
+	{
+		splineEditor->spline.Update(deltaTime);
+
+		if(splineEditor->spline.nodes.size() > 0)
+			splineEditor->tester->worldProperties.translation = splineEditor->spline.GetPosition();
+	}
+
+	if(camera.mode == CameraMode::path)
+	{
+		spline0.Update(deltaTime);
+		camera.viewProperties.position = spline0.GetPosition();
+
+		camera.SetTarget(glm::vec3(0,0,0));
+	}
 
 	processContinuousInput();
 	draw();
@@ -299,47 +298,62 @@ void draw()
 
 	for(int i = 0; i < objectList.size(); i++)
 	{
-		//Set shader
-		shaderManager.SetShaderProgram(objectList[i]->GetShaderProgramID());
-
-		//Set MVP matrix
-		glm::mat4 MVP = projectionMatrix * viewMatrix * objectList.at(i)->GetModelMatrix();
-		int mvpMatrixLocation = glGetUniformLocation(objectList[i]->GetShaderProgramID(), "mvpMatrix"); // Get the location of mvp matrix in the shader
-		glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP)); // Send updated mvp matrix 
-		
-		//Set Bone matrices
-		if(objectList[i]->HasSkeleton())
+		if(objectList[i]->drawMe)
 		{
-			glm::mat4 boneMatrices[MAX_BONES];
-			int boneMatricesAttribLocations[MAX_BONES]; //INVESTIGATE - does this really need to be done every frame?
+			//Set shader
+			shaderManager.SetShaderProgram(objectList[i]->GetShaderProgramID());
 
-			for(int j = 0; j < MAX_BONES; j++)
-				boneMatrices[j] = glm::mat4(1);
-
-			//objectList[i]->GetSkeleton()->UpdateGlobalTransforms(objectList[i]->GetSkeleton()->GetRootBone(), glm::mat4());
-
-			int numBones = objectList[i]->GetSkeleton()->GetBones().size();
-			for(int boneidx = 0; boneidx < numBones; boneidx++)
+			//Set MVP matrix
+			glm::mat4 MVP = projectionMatrix * viewMatrix * objectList.at(i)->GetModelMatrix();
+			int mvpMatrixLocation = glGetUniformLocation(objectList[i]->GetShaderProgramID(), "mvpMatrix"); // Get the location of mvp matrix in the shader
+			glUniformMatrix4fv(mvpMatrixLocation, 1, GL_FALSE, glm::value_ptr(MVP)); // Send updated mvp matrix 
+		
+			//Set Bone matrices
+			if(objectList[i]->HasSkeleton())
 			{
-				Bone* bone = objectList[i]->GetSkeleton()->GetBone(boneidx);
-				boneMatrices[bone->id] = bone->finalTransform;
+				glm::mat4 boneMatrices[MAX_BONES];
+				int boneMatricesAttribLocations[MAX_BONES]; //INVESTIGATE - does this really need to be done every frame?
+
+				for(int j = 0; j < MAX_BONES; j++)
+					boneMatrices[j] = glm::mat4(1);
+
+				//objectList[i]->GetSkeleton()->UpdateGlobalTransforms(objectList[i]->GetSkeleton()->GetRootBone(), glm::mat4());
+
+				int numBones = objectList[i]->GetSkeleton()->GetBones().size();
+				for(int boneidx = 0; boneidx < numBones; boneidx++)
+				{
+					Bone* bone = objectList[i]->GetSkeleton()->GetBone(boneidx);
+					boneMatrices[bone->id] = bone->finalTransform;
+				}
+
+				//Send up-to-date bone matrix data to the shader 
+				for(int j = 0; j < MAX_BONES; j++)
+				{
+					stringstream ss;
+					ss << "boneMatrices[" << j << "]";
+					boneMatricesAttribLocations[j] = glGetUniformLocation (objectList[i]->GetShaderProgramID(), ss.str().c_str()); //Get location of bone matrix in shader
+					glUniformMatrix4fv (boneMatricesAttribLocations[j], numBones, GL_FALSE, glm::value_ptr(boneMatrices[j])); //send updated matrix
+				}
 			}
 
-			//Send up-to-date bone matrix data to the shader 
-			for(int j = 0; j < MAX_BONES; j++)
-			{
-				stringstream ss;
-				ss << "boneMatrices[" << j << "]";
-				boneMatricesAttribLocations[j] = glGetUniformLocation (objectList[i]->GetShaderProgramID(), ss.str().c_str()); //Get location of bone matrix in shader
-				glUniformMatrix4fv (boneMatricesAttribLocations[j], numBones, GL_FALSE, glm::value_ptr(boneMatrices[j])); //send updated matrix
-			}
+			//Render
+			objectList.at(i)->Render(shaderManager.GetCurrentShaderProgramID());
 		}
-
-		//Render
-		objectList.at(i)->Render(shaderManager.GetCurrentShaderProgramID());
 	}	
 
-	printouts();
+	shaderManager.SetShaderProgram(shaderManager.GetShaderProgramID("text"));
+
+	std::stringstream ss;
+	ss.str(std::string()); // clear
+	ss << "Press 'h' to show / hide controls";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
+
+	ss.str(std::string()); // clear
+	ss << fps << " fps ";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
+
+	if(printText)
+		printouts();
 
 	glutSwapBuffers();
 }
@@ -350,12 +364,38 @@ void keyPressed (unsigned char key, int x, int y)
 	keyStates[key] = true; // Set the state of the current key to pressed  
 
 	if(key == KEY::KEY_L || key == KEY::KEY_l)
-		editMode = EditMode::levelEdit;
+	{
+		if(editMode != EditMode::levelEdit)
+		{
+			if(editMode == EditMode::splineEdit)
+			{
+				splineEditor->tester->drawMe = false;
+				splineEditor->spline.DeleteAllNodes();
+			}
 
-	camera.ProcessKeyboardOnce(key, x, y);
-	player->ProcessKeyboardOnce(key, x, y);
-	donald->ProcessKeyboardOnce(key, x, y);
-	
+			editMode = EditMode::levelEdit;
+		}
+		else
+		{
+			editMode = EditMode::off;
+		}
+	}
+
+	if(key == KEY::KEY_P || key == KEY::KEY_p)
+	{
+		if(editMode != EditMode::splineEdit)
+		{
+			editMode = EditMode::splineEdit;
+			splineEditor->tester->drawMe = true;
+		}
+		else
+		{
+			editMode = EditMode::off;
+			splineEditor->tester->drawMe = false;
+			splineEditor->spline.DeleteAllNodes();
+		}
+	}
+
 	if(editMode == levelEdit)
 	{
 		levelEditor->ProcessKeyboardOnce(key, x, y);
@@ -366,6 +406,17 @@ void keyPressed (unsigned char key, int x, int y)
 			objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 		}
 	}
+	else if(editMode == splineEdit)
+	{
+		splineEditor->ProcessKeyboardOnce(key, x, y);
+	}
+		
+	camera.ProcessKeyboardOnce(key, x, y);
+	player->ProcessKeyboardOnce(key, x, y);
+	donald->ProcessKeyboardOnce(key, x, y);
+
+	if(key == KEY::KEY_h || key == KEY::KEY_H)
+		printText = !printText;
 }  
   
 void keyUp (unsigned char key, int x, int y) 
@@ -376,7 +427,7 @@ void keyUp (unsigned char key, int x, int y)
 //Process keystates
 void processContinuousInput()
 {
-	if(keyStates[27])
+	if(keyStates[KEY::KEY_ESCAPE])
 	{
 		if(!freeMouse)
 		{
@@ -386,11 +437,13 @@ void processContinuousInput()
 	}
 	//exit(0);
 
-	camera.ProcessKeyboardContinuous(keyStates, deltaTime);
-	player->ProcessKeyboardContinuous(keyStates, deltaTime);
-
 	if(editMode == levelEdit)
 		levelEditor->ProcessKeyboardContinuous(keyStates, directionKeys, deltaTime);
+	else if(editMode == splineEdit)
+		splineEditor->ProcessKeyboardContinuous(keyStates, directionKeys, deltaTime);
+
+	camera.ProcessKeyboardContinuous(keyStates, deltaTime);
+	player->ProcessKeyboardContinuous(keyStates, deltaTime);
 }
 
 //DIRECTIONAL KEYS DOWN
@@ -417,6 +470,8 @@ void handleSpecialKeypress(int key, int x, int y)
 
 	if(editMode == levelEdit)
 		levelEditor->ProcessKeyboardOnce(key, x, y);
+	else if(editMode == splineEdit)
+		splineEditor->ProcessKeyboardOnce(key, x, y);
 }
 
 //DIRECTIONAL KEYS UP
@@ -508,8 +563,6 @@ void printouts()
 {
 	std::stringstream ss;
 
-	shaderManager.SetShaderProgram(shaderManager.GetShaderProgramID("text"));
-
 	//Bottom left is 0,0
 
 	ss.str(std::string()); // clear
@@ -517,22 +570,21 @@ void printouts()
 	switch(editMode)
 	{
 		case EditMode::levelEdit:
-			ss << "levelSelect";
+			ss << "LEVEL EDITOR";
+			break;
+		case EditMode::splineEdit:
+			ss << "SPLINE EDITOR";
 			break;
 		
 	}
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
-
-	ss.str(std::string()); // clear
-	ss << fps << " fps ";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-60, ss.str().c_str());
 
-	ss.str(std::string()); // clear
-	if(Skeleton::ConstraintsEnabled)
-		ss << "Constraints enabled |c|";
-	else
-		ss << "Constraints disabled |c|";
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
+	//ss.str(std::string()); // clear
+	//if(Skeleton::ConstraintsEnabled)
+	//	ss << "Constraints enabled |c|";
+	//else
+	//	ss << "Constraints disabled |c|";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
 
 	//PRINT CAMERA
 	ss.str(std::string()); // clear
@@ -547,8 +599,6 @@ void printouts()
 	ss << "camera.up: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.up.x << ", " << camera.viewProperties.up.y << ", " << camera.viewProperties.up.z << ")";
 	drawText(20,WINDOW_HEIGHT-60, ss.str().c_str());
 
-	
-
 	//PRINT ANIMATION TIMER
 	//TODO - selected model
 	if(player != nullptr)
@@ -561,6 +611,8 @@ void printouts()
 
 	if(editMode == EditMode::levelEdit)
 		levelEditor->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
+	else if(editMode == EditMode::splineEdit)
+		splineEditor->PrintOuts(WINDOW_WIDTH, WINDOW_HEIGHT);
 }
 
 

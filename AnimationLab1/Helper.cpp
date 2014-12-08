@@ -1,5 +1,7 @@
 #include "Helper.h"
 
+bool disableText = false;
+
 glm::quat formQuaternion(double x, double y, double z, double angle)
 {
 	glm::quat out;

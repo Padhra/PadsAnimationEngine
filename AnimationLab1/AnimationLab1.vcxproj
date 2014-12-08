@@ -113,10 +113,15 @@
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="Spline.h" />
+    <ClInclude Include="SplineEditor.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\black.ps" />
     <None Include="Shaders\diffuse.ps" />
     <None Include="Shaders\diffuse.vs" />
+    <None Include="Shaders\red.ps" />
+    <None Include="Shaders\white.ps" />
+    <None Include="Shaders\node.vs" />
     <None Include="Shaders\skinned.ps" />
     <None Include="Shaders\skinned.vs" />
   </ItemGroup>

@@ -8,9 +8,11 @@ NPC::NPC(vector<Model*> &objectList, Model* model, Player* player)
 
 	model->serialise = false;
 
-	LoadAnimation("Animations/fight.dae");
-	LoadAnimation("Animations/twirl.dae"); 
-	LoadAnimation("Models/sora.dae"); 
+	//LoadAnimation("Animations/fight.dae");
+	//LoadAnimation("Animations/twirl.dae"); 
+	LoadAnimation("Models/don1.dae");
+	LoadAnimation("Models/don1.dae"); 
+	LoadAnimation("Models/don1.dae"); 
 
 	skeleton = model->GetSkeleton();
 

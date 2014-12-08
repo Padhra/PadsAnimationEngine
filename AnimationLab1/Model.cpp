@@ -1,6 +1,6 @@
 #include "Model.h"
 
-Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint p_shaderProgramID, bool serialise)
+Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint p_shaderProgramID, bool serialise, bool wireframe)
 {
 	hasSkeleton = false;
 
@@ -18,11 +18,16 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 	shaderProgramID = p_shaderProgramID;
 
 	this->serialise = serialise;
+
+	this->wireframe = wireframe;
+
+	drawMe = true;
 }
 
 Model::~Model()
 {
-	delete skeleton;
+	if(hasSkeleton)
+		delete skeleton;
 }
 
 bool Model::Load(const char* file_name)
@@ -36,7 +41,8 @@ bool Model::Load(const char* file_name)
 	}
 
 	globalInverseTransform = convertAssimpMatrix(scene->mRootNode->mTransformation);
-	//globalInverseTransform = glm::inverse(globalInverseTransform);
+	//glm::mat4 fix = GetModelMatrix() * globalInverseTransform;
+	//decomposeTRS(fix, worldProperties.translation, worldProperties.orientation, worldProperties.scale);
 	
 	printf("LOADING MODEL...\n");
 	printf("%i animations\n", scene->mNumAnimations);
@@ -276,6 +282,9 @@ void Model::Render(GLuint shader)
 {
 	glBindVertexArray(vao);
 		
+	if(wireframe)
+		glPolygonMode(GL_FRONT, GL_LINE); 
+
 	if(meshEntries.size() > 1)
 	{
 		for(int meshEntryIdx = 0; meshEntryIdx < meshEntries.size(); meshEntryIdx++)
@@ -303,10 +312,11 @@ void Model::Render(GLuint shader)
 	}
 	else
 	{
-		glPolygonMode(GL_FRONT, GL_LINE); 
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);	
-		glPolygonMode(GL_FRONT, GL_FILL); 
 	}
+
+	if(wireframe)
+		glPolygonMode(GL_FRONT, GL_FILL); 
 
 	// Make sure the VAO is not changed from the outside    
     //glBindVertexArray(0); //?

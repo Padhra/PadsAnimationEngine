@@ -86,13 +86,16 @@ class Model
 		Skeleton* skeleton;
 		bool hasSkeleton;
 
-		glm::mat4 globalInverseTransform;
-		
+		bool wireframe;
+
 	public:
 		
 		bool serialise;
+		bool drawMe;
 
-		Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint shaderProgramID, bool serialise = true);
+		glm::mat4 globalInverseTransform;
+
+		Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const char* file_name, GLuint shaderProgramID, bool serialise = true, bool wireframe = false);
 		~Model();
 
 		WorldProperties worldProperties;
@@ -119,10 +122,11 @@ class Model
 		
 		glm::mat4 GetModelMatrix() 
 		{ 
-			return //globalInverseTransform *
+			return 
 				glm::translate(glm::mat4(1.0f), worldProperties.translation) 
 				* worldProperties.orientation
-				* glm::scale(glm::mat4(1.0f), worldProperties.scale);
+				* glm::scale(glm::mat4(1.0f), worldProperties.scale)
+				* globalInverseTransform;
 		}		
 
 		glm::vec3 GetEulerAngles()
@@ -130,7 +134,6 @@ class Model
 			return glm::eulerAngles(glm::toQuat(worldProperties.orientation));
 		}
 
-		//TODO - Test
 		glm::vec3 GetForward()
 		{
 			return glm::toQuat(worldProperties.orientation) * glm::vec3(0,0,1);

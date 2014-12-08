@@ -14,6 +14,8 @@
 #define SQUALL "Models/Squall.DAE"
 #define RIKKU "Models/Rikku.DAE"
 
+#define BOX "Models/cubeTri.obj"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtc/type_ptr.hpp>

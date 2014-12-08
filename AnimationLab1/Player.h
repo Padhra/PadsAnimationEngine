@@ -23,6 +23,8 @@ class Player
 
 		Skeleton* skeleton;
 
+		float lookAngle;
+
 	public:
 
 		Model *model;

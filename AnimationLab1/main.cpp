@@ -20,6 +20,7 @@
 
 #include "Common.h"
 #include "Keys.h"
+#include "Gamepad.h"
 
 #include <string> 
 #include <fstream>
@@ -60,6 +61,9 @@ Camera camera;
 glm::mat4 projectionMatrix; // Store the projection matrix
 bool freeMouse = false;
 
+//int WINDOW_WIDTH = 1920;
+//int WINDOW_HEIGHT = 1080;
+
 int WINDOW_WIDTH = 1280;
 int WINDOW_HEIGHT = 720;
 
@@ -89,13 +93,15 @@ bool printText = false;
 
 Spline spline0;
 
+Gamepad* xgamepad;
+
 int main(int argc, char** argv)
 {
 	// Set up the window
 	glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB|GLUT_DEPTH);
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-	glutInitWindowPosition (100, 100); 
+	glutInitWindowPosition (0, 0); 
     glutCreateWindow("KH 0.5 Remix");
 
 	glutSetCursor(GLUT_CURSOR_NONE);
@@ -140,6 +146,8 @@ int main(int argc, char** argv)
 	//TODO - constructor for camera
 	camera.Init(glm::vec3(0.0f, 0.0f, 0.0f), 0.0002f, 0.01f); 
 
+	xgamepad = new Gamepad();
+
 	levelEditor = new LevelEditor(&objectList);
 
 	shaderManager.Init();
@@ -158,7 +166,7 @@ int main(int argc, char** argv)
 	vector<Model*> loadedObjects = LevelEditor::Load(1);
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
-	player = new Player(objectList, &camera, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
+	player = new Player(objectList, &camera, xgamepad, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
 	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::mat4(1), glm::vec3(.1), "Models/don1.dae", shaderManager.GetShaderProgramID("skinned")), player);
 
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/destinyisland.dae", shaderManager.GetShaderProgramID("diffuse")));
@@ -210,11 +218,11 @@ int main(int argc, char** argv)
 	//targetPath.SetMode(InterpolationMode::Cubic);
 	#pragma endregion
 
-	splineEditor = new SplineEditor();
+	splineEditor = new SplineEditor(&camera);
 	splineEditor->spline.SetMode(InterpolationMode::Cubic);
 
 	spline0.SetSpeed(0.5f);
-	spline0.Load(0, false);
+	spline0.Load(2, false);
 
 	glutMainLoop();
     
@@ -343,14 +351,14 @@ void draw()
 
 	shaderManager.SetShaderProgram(shaderManager.GetShaderProgramID("text"));
 
-	std::stringstream ss;
-	ss.str(std::string()); // clear
-	ss << "Press 'h' to show / hide controls";
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-20, ss.str().c_str());
+	//std::stringstream ss;
+	//ss.str(std::string()); // clear
+	//ss << "Press 'h' to show / hide controls";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-20, ss.str().c_str());
 
-	ss.str(std::string()); // clear
-	ss << fps << " fps ";
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
+	//ss.str(std::string()); // clear
+	//ss << fps << " fps ";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-40, ss.str().c_str());
 
 	if(printText)
 		printouts();
@@ -577,7 +585,7 @@ void printouts()
 			break;
 		
 	}
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-60, ss.str().c_str());
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-60, ss.str().c_str());
 
 	//ss.str(std::string()); // clear
 	//if(Skeleton::ConstraintsEnabled)

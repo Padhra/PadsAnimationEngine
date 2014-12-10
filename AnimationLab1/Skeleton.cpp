@@ -186,14 +186,14 @@ void Skeleton::Animate(double deltaTime)
 std::map<int, std::vector<Pose>> Skeleton::SampleKeyframes()
 {
 	std::map<int, std::vector<Pose>> contributingPoses;
-
-	for(int boneIdx = 0; boneIdx < bones.size(); boneIdx++)
+	
+	for(int aniIdx = 0; aniIdx < animations.size(); aniIdx++)
 	{
-		for(int aniIdx = 0; aniIdx < animations.size(); aniIdx++)
-		{
-			Animation* animation = animations[aniIdx];
+		Animation* animation = animations[aniIdx];
 
-			if(animation->weight > 0)
+		if(animation->weight > 0)
+		{
+			for(int boneIdx = 0; boneIdx < bones.size(); boneIdx++)
 			{
 				Pose pose;
 				glm::mat4 translation = glm::mat4(1);

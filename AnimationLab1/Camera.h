@@ -19,7 +19,7 @@ struct ViewProperties
 	glm::vec3 position;
 	glm::vec3 forward; 
 	glm::vec3 up;
-	glm::quat rotation;
+	glm::quat XZrotation;
 };
 
 class Camera
@@ -119,7 +119,7 @@ class Camera
 				glm::vec3 right = glm::vec3(sin(horizontalXZAngle - 3.14f/2.0f), 0, cos(horizontalXZAngle - 3.14f/2.0f));
 				
 				glm::quat rotation = glm::quat(glm::vec3(0, -horizontalXZAngle, 0)); //yaw
-				this->viewProperties.rotation = rotation;
+				this->viewProperties.XZrotation = rotation;
 				rotation *= glm::angleAxis(-verticalAngle * 100, right); //pitch
 				//could actually have done it with just quat it seems!
 

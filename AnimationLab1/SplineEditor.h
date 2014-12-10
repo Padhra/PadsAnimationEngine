@@ -6,6 +6,7 @@
 #include "ShaderManager.h"
 
 #include "Spline.h"
+#include "Camera.h"
 
 #include <fstream>
 
@@ -27,7 +28,9 @@ class SplineEditor
 
 	float fileSelect;
 
-	SplineEditor()
+	Camera *camera;
+
+	SplineEditor(Camera* camera)
 	{
 		option = 1;
 		altDirectional = false;
@@ -38,6 +41,8 @@ class SplineEditor
 		tester = new Model(glm::vec3(0), glm::mat4(1), glm::vec3(.06f), BOX, ShaderManager::Instance->GetShaderProgramID("black"), false, true);
 		Node::objectList->push_back(tester);
 		tester->drawMe = false;
+
+		this->camera = camera;
 	}
 
 	~SplineEditor()
@@ -90,7 +95,7 @@ class SplineEditor
 
 		if(key == KEY::KEY_3) // Add Node
 		{
-			if(spline.nodes.size() == 0)
+			/*if(spline.nodes.size() == 0)
 			{
 				spline.AddNode(new Node(glm::vec3(0,0,0)));
 			}
@@ -98,10 +103,11 @@ class SplineEditor
 			{
 				spline.nodes[selectedNode % spline.nodes.size()]->marker->SetShaderProgramID(ShaderManager::Instance->GetShaderProgramID("black"));
 				spline.AddNode(new Node(spline.nodes[selectedNode % spline.nodes.size()]->GetPosition() + glm::vec3(0,0.5,0)));
-			}
+			}*/
+			spline.AddNode(new Node(camera->viewProperties.position));
 
-			selectedNode = spline.nodes.size()-1;
-			spline.nodes[selectedNode % spline.nodes.size()]->marker->SetShaderProgramID(ShaderManager::Instance->GetShaderProgramID("red"));
+			//selectedNode = spline.nodes.size()-1;
+			//spline.nodes[selectedNode % spline.nodes.size()]->marker->SetShaderProgramID(ShaderManager::Instance->GetShaderProgramID("red"));
 		}
 		else if(key == KEY::KEY_4) //Delete Node
 		{
@@ -168,18 +174,18 @@ class SplineEditor
 
 	void PrintOuts(int winw, int winh)
 	{
-		int numUIEntries = 9;
+		int numUIEntries = 9+1;
 
 		std::stringstream ss;
 		ss.str(std::string()); // clear
-		ss << "SPLINE EDITOR";
-		drawText(winw-(strlen(ss.str().c_str())*10), numUIEntries*20, ss.str().c_str());
+		ss << "Spline Editor";
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), numUIEntries*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|1| Selected Node - ";
 		if(spline.nodes.size() > 0)
 			ss << selectedNode % spline.nodes.size();
-		drawText(winw-(strlen(ss.str().c_str())*10), (numUIEntries-1)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), (numUIEntries-1)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|2| Translation";
@@ -191,32 +197,32 @@ class SplineEditor
 			pos = node->GetPosition();
 			ss << "(x: " << pos.x << ", y: " << pos.y << ", z: " << pos.z << ")";
 		}
-		drawText(winw-(strlen(ss.str().c_str())*10), (numUIEntries-2)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), (numUIEntries-2)*20, ss.str().c_str());
 	
 		ss.str(std::string()); // clear
 		ss << "|3| Add Node";
-		drawText(winw-(strlen(ss.str().c_str())*10), (numUIEntries-3)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), (numUIEntries-3)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|4| Delete Node";
-		drawText(winw-(strlen(ss.str().c_str())*10), (numUIEntries-4)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), (numUIEntries-4)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|5| fileSelect - " << fileSelect;
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-5)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-5)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|6| Save file ";
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-6)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-6)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|7| Load file ";
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-7)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-7)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		glm::vec3 testPos = tester->worldProperties.translation;
 		ss << "Tester: (x: " << testPos.x << ", y: " << testPos.y << ", z: " << testPos.z << ")";
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-8)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-8)*20, ss.str().c_str());
 
 	}
 };

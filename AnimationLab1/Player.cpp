@@ -2,7 +2,7 @@
 #include "Keys.h"
 #include <iomanip>
 
-Player::Player(vector<Model*> &objectList, Camera* camera, Model* model)
+Player::Player(vector<Model*> &objectList, Camera* camera, Gamepad* gamepad, Model* model)
 {
 	this->model = model;
 	objectList.push_back(model);
@@ -11,6 +11,8 @@ Player::Player(vector<Model*> &objectList, Camera* camera, Model* model)
 
 	this->camera = camera;
 	camera->SetTarget(model->worldProperties.translation);
+
+	this->gamepad = gamepad;
 
 	//xzSpeed = 0;
 	lookAngle = 0;
@@ -35,10 +37,22 @@ void Player::ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
 {
 	if(camera->mode == CameraMode::tp)
 	{
-		if(keyStates[KEY::KEY_w] || keyStates[KEY::KEY_W])
+		float vertical = 0.0f;
+		float horizontal = 0.0f;
+
+		if(Player::IsAnyDirectionKeyDown(keyStates))
 		{
-			Move(deltaTime);
-			SetState(State::run);
+			if(keyStates[KEY::KEY_w] || keyStates[KEY::KEY_W])
+				vertical++;	
+			if(keyStates[KEY::KEY_a] || keyStates[KEY::KEY_A])
+				horizontal--;	
+			if(keyStates[KEY::KEY_s] || keyStates[KEY::KEY_S])
+				vertical--;	
+			if(keyStates[KEY::KEY_d] || keyStates[KEY::KEY_D])
+				horizontal++;	
+
+			Move(deltaTime, -horizontal, vertical);
+			
 		}
 		else if(state < State::twirl) //i.e. not a oneshot
 		{
@@ -62,9 +76,19 @@ void Player::ProcessKeyboardOnce(unsigned char key, int x, int y)
 void Player::Update(double deltaTime)
 {
 	if(skeleton->animationController.isIdle)
-	{
 		SetState(State::idle);
+
+	if(camera->mode == CameraMode::tp)
+	{
+		camera->SetTarget(model->worldProperties.translation);
+
+		/*gamepad->Refresh();
+		if(gamepad->leftStickX != 0 || gamepad->leftStickY != 0)
+			Move(deltaTime, -gamepad->leftStickX, gamepad->leftStickY);*/
 	}
+
+	//lookAngle += deltaTime * .01;
+	//model->worldProperties.orientation = glm::toMat4(glm::inverse(camera->viewProperties.rotation)) * glm::rotate(glm::mat4(1), -lookAngle, glm::vec3(0,1,0));
 }
 
 void Player::SetState(State newState)
@@ -82,16 +106,26 @@ void Player::SetState(State newState)
 	}
 }
 
-void Player::Move(double deltaTime)
+void Player::Move(double deltaTime, float horizontal, float vertical)
 {
+	//horizonal -1 <-> 1  X
+	//vertical -1 <-> 1  Y
+
+	SetState(State::run);
+
 	glm::vec3 forwardXZ = camera->viewProperties.forward;
 	forwardXZ.y = 0;
 	forwardXZ = glm::normalize(forwardXZ);
-	model->worldProperties.translation += forwardXZ * float(deltaTime) * speedScalar;
-	
-	camera->SetTarget(model->worldProperties.translation);
 
-	model->worldProperties.orientation = glm::toMat4(glm::inverse(camera->viewProperties.rotation));
+	glm::vec3 moveDir = glm::inverse(camera->viewProperties.XZrotation) * glm::vec3(horizontal, 0, vertical);
+	moveDir = glm::normalize(moveDir);
+
+	glm::vec3 offset = moveDir * float(deltaTime) * speedScalar;
+
+	model->worldProperties.translation += offset;
+
+	model->worldProperties.orientation = glm::toMat4(glm::inverse(camera->viewProperties.XZrotation));
+	model->worldProperties.orientation *= glm::toMat4(glm::quat(forwardXZ, moveDir));
 }
 
 void Player::PrintOuts(int winw, int winh)

@@ -47,6 +47,8 @@ struct AnimationCommand
 	{
 	}
 
+	//TODO - transplanting. Ideally you would be able to send in the animation command
+	//a list of animations and a list of bones mapped to those animation
 	AnimationCommand(Animation* animation, bool loop, float blendDuration, TransitionType transitionType)
 	{
 		this->animation = animation;
@@ -97,10 +99,10 @@ struct AnimationController
 
 		if(isBlending) //If blending do that
 		{
-			blendTimer += deltaTime/1000;
+			blendTimer += (deltaTime/1000) * 0.1f;
 			float t = blendTimer / blendDuration;
 
-			next->weight = lerp(0.0f, 1.0f, t);
+			next->weight = t*t * (3.0f - 2.0f*t);//lerp(0.0f, 1.0f, t);
 			current->weight = 1 - next->weight;
 
 			if(t >= 1)

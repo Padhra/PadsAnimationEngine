@@ -42,6 +42,8 @@ struct Animation {
 	bool frozen;
 
 	bool loop;
+
+	//std::vector<Bone*> effectedBones;
 	
 	Animation(std::string name, int id, double duration)
 	{

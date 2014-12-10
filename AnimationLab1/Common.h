@@ -4,6 +4,8 @@
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 #define PRECISION 3
 
+#define LETTER_WIDTH 9
+
 #define MAX_ANIMATIONS 5
 
 #define HAND "Models/hand_with_animation.dae"

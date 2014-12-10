@@ -48,7 +48,8 @@ void drawText(int x, int y, const char *st)
 	
 	for(i=0; i < l; i++) // loop until i is greater then l
 	{
-		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, st[i]); // Print a character on the screen
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, st[i]);
+		//glutBitmapCharacter(GLUT_BITMAP_9_BY_15, st[i]); // Print a character on the screen
 	}
 }
 

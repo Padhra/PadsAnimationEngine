@@ -103,32 +103,32 @@ void LevelEditor::ProcessKeyboardOnce(unsigned char key, int x, int y)
 
 void LevelEditor::PrintOuts(int winw, int winh)
 {
-	int numUIEntries = 10;
+	int numUIEntries = 10+1;
 
 	std::stringstream ss;
 	ss.str(std::string()); // clear
-	ss << "LEVEL EDITOR";
-	drawText(winw-(strlen(ss.str().c_str())*10), numUIEntries*20, ss.str().c_str());
+	ss << "Level Editor";
+	drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), numUIEntries*20, ss.str().c_str());
 
 	if(objectList->size() > 0)
 	{
 		ss.str(std::string()); // clear
 		ss << "|1| objectList: [" << selectedObject % objectList->size() << "] " << objectList->at(selectedObject % objectList->size())->GetFileName();
-		drawText(winw-(strlen(ss.str().c_str())*10), (numUIEntries-1)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), (numUIEntries-1)*20, ss.str().c_str());
 	
 		ss.str(std::string()); // clear
 		ss << "pos: (x: " << objectList->operator[](selectedObject % objectList->size())->worldProperties.translation.x 
 			<< ", y: " << objectList->operator[](selectedObject % objectList->size())->worldProperties.translation.y
 			<< ", z: " << objectList->operator[](selectedObject % objectList->size())->worldProperties.translation.z;
-		drawText(winw-(strlen(ss.str().c_str())*10), (numUIEntries-2)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), (numUIEntries-2)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|2| XY translation";
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-3)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-3)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|3| XZ translation";
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-4)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-4)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 	
@@ -136,22 +136,22 @@ void LevelEditor::PrintOuts(int winw, int winh)
 		ss << "|4| rot: (x: " << euler.x 
 			<< ", y: " << euler.y
 			<< ", z: " << euler.z;
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-5)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-5)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|5| Scale = " << objectList->operator[](selectedObject % objectList->size())->worldProperties.scale.x;
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-6)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-6)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|6| Level file select - " << fileSelect;
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-7)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-7)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|7| Save file";
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-8)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-8)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
 		ss << "|8| Load file";
-		drawText(winw-(strlen(ss.str().c_str())*10),(numUIEntries-9)*20, ss.str().c_str());
+		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-9)*20, ss.str().c_str());
 	}
 }

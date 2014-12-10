@@ -56,6 +56,13 @@ class Spline
 			}
 		}
 
+		glm::vec3 GetPositionXZ(float t = -1.0f)
+		{
+			glm::vec3 posXZ = GetPosition(t);
+			posXZ.y = 0;
+			return posXZ;
+		}
+
 		glm::vec3 GetApproximateForward()
 		{
 			float timestep = 0.1f;

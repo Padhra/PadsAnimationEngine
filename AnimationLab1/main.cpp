@@ -92,7 +92,6 @@ NPC* donald;
 bool printText = false;
 
 Spline cameraSpline;
-Spline donaldSpline;
 
 Gamepad* xgamepad;
 
@@ -167,10 +166,10 @@ int main(int argc, char** argv)
 	vector<Model*> loadedObjects = LevelEditor::Load(1);
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
-	player = new Player(objectList, &camera, xgamepad, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"))); 
-	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::mat4(1), glm::vec3(.1), "Models/don1.dae", shaderManager.GetShaderProgramID("skinned")), player);
+	player = new Player(objectList, &camera, xgamepad, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"), false)); 
+	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::mat4(1), glm::vec3(.1), "Models/don1.dae", shaderManager.GetShaderProgramID("skinned"), false), player);
 
-	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(1), "Models/destinyisland.dae", shaderManager.GetShaderProgramID("diffuse")));
+	objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.0001), "Models/jumbo.dae", shaderManager.GetShaderProgramID("diffuse")));
 
 	#pragma region IK Stuff
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
@@ -226,10 +225,14 @@ int main(int argc, char** argv)
 	cameraSpline.Load(2, false);
 	cameraSpline.constantSpeed = true;
 
-	donaldSpline.SetSpeed(4.0f);
-	donaldSpline.Load(10, true);
+	Spline donaldSpline;
+	donaldSpline.SetSpeed(3.0f);
+	donaldSpline.Load(11, true);
 	donaldSpline.constantSpeed = true;
 	donaldSpline.mode = InterpolationMode::Cubic;
+
+	donald->patrol = donaldSpline;
+	donald->patrolling = true;
 
 	glutMainLoop();
     
@@ -297,19 +300,6 @@ void update()
 
 		camera.SetTarget(glm::vec3(0,0,0));
 	}
-
-	donaldSpline.Update(deltaTime);
-	donald->model->worldProperties.translation = donaldSpline.GetPosition();
-
-	glm::vec3 v0 = glm::normalize(donald->model->GetForward());
-	v0.y = 0;
-	glm::vec3 v1 = glm::normalize(donaldSpline.GetApproximateForward());
-	v1.y = 0;
-
-	glm::quat q = glm::quat(v0,v1);
-
-	donald->model->worldProperties.orientation *= glm::toMat4(q); //glm::lookAt(donald->model->worldProperties.translation,
-		//donald->model->worldProperties.translation + glm::normalize(donaldSpline.GetApproximateForward()), glm::vec3(0,1,0));
 
 	processContinuousInput();
 	draw();

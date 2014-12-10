@@ -3,6 +3,7 @@
 #include "Model.h"
 #include "Common.h"
 #include "Player.h"
+#include "Spline.h"
 
 namespace NPCns {
 enum State { idle = 0, wave, talk };
@@ -24,6 +25,9 @@ class NPC //TODO inherist from Character
 		bool playerInRadius;
 
 		bool haveAcknowledged;
+
+		bool patrolling;
+		Spline patrol;
 
 		NPC(vector<Model*> &objectList, Model* model, Player* player);
 		~NPC(){};

@@ -18,8 +18,10 @@ class Spline
 		double timer; //in seconds
 		int currentNode;
 
-		static float speedScalar;
+		float speedScalar;
 		short mode; // 0 = Linear, 1 = cubic
+
+		bool constantSpeed;
 
 		Spline()
 		{
@@ -27,15 +29,20 @@ class Spline
 
 			currentNode = 0;
 			timer = 0;
+
+			constantSpeed = false;
+
+			speedScalar = 1.0f;
 		}
 
 		void SetMode(short mode) { this->mode = mode;}
 
 		void SetSpeed(float speed) { speedScalar = speed;}
 
-		glm::vec3 GetPosition()
+		glm::vec3 GetPosition(float t = -1.0f)
 		{
-			float t = timer; 
+			if(t == -1.0f)
+				t = timer; 
 
 			if(mode == InterpolationMode::Cubic)
 			{
@@ -47,6 +54,15 @@ class Spline
 			{
 				return lerp(nodes[currentNode % nodes.size()]->GetPosition(), nodes[(currentNode+1) % nodes.size()]->GetPosition(), t);
 			}
+		}
+
+		glm::vec3 GetApproximateForward()
+		{
+			float timestep = 0.1f;
+			glm::vec3 v0 = GetPosition();
+			glm::vec3 v1 = GetPosition(timer + timestep);
+
+			return v1 - v0;
 		}
 
 		void AddNode(Node* node) 
@@ -76,7 +92,20 @@ class Spline
 
 		void Update(double deltaTime)
 		{
-			timer += deltaTime/1000 * speedScalar;
+			if(constantSpeed)
+			{
+				if(nodes.size() > 0)
+				{
+					float distance = glm::distance(nodes[currentNode % nodes.size()]->GetPosition(), nodes[(currentNode+1) % nodes.size()]->GetPosition());
+
+					if(distance != 0)
+						timer += deltaTime/1000 * speedScalar * (1.0 / distance);
+				}
+			}
+			else
+			{
+				timer += deltaTime/1000 * speedScalar ;
+			}
 
 			if(timer >= 1.0)
 			{

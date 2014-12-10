@@ -52,7 +52,7 @@ class Camera
 		//float yMaxLimit; //= -40f
 		//float yMinLimit; //=70f
 
-		float targetYOffset;
+		glm::vec3 targetYOffset;
 		
 		void Init(glm::vec3 position, float p_turnSpeed = 0.005f, float p_moveSpeed = 0.01f ) 
 		{ 
@@ -71,6 +71,8 @@ class Camera
 			scrollWheelSensivity = 0.15f;
 
 			target = glm::vec3(0,0,0);
+			targetYOffset = glm::vec3(0,1,0);
+
 		}
 
 		void MouseRotate(int x, int y, int p_winw, int p_winh, int deltaTime)

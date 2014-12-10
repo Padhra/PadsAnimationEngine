@@ -91,7 +91,8 @@ NPC* donald;
 
 bool printText = false;
 
-Spline spline0;
+Spline cameraSpline;
+Spline donaldSpline;
 
 Gamepad* xgamepad;
 
@@ -221,8 +222,14 @@ int main(int argc, char** argv)
 	splineEditor = new SplineEditor(&camera);
 	splineEditor->spline.SetMode(InterpolationMode::Cubic);
 
-	spline0.SetSpeed(0.5f);
-	spline0.Load(2, false);
+	cameraSpline.SetSpeed(10.0f);
+	cameraSpline.Load(2, false);
+	cameraSpline.constantSpeed = true;
+
+	donaldSpline.SetSpeed(4.0f);
+	donaldSpline.Load(10, true);
+	donaldSpline.constantSpeed = true;
+	donaldSpline.mode = InterpolationMode::Cubic;
 
 	glutMainLoop();
     
@@ -285,11 +292,24 @@ void update()
 
 	if(camera.mode == CameraMode::path)
 	{
-		spline0.Update(deltaTime);
-		camera.viewProperties.position = spline0.GetPosition();
+		cameraSpline.Update(deltaTime);
+		camera.viewProperties.position = cameraSpline.GetPosition();
 
 		camera.SetTarget(glm::vec3(0,0,0));
 	}
+
+	donaldSpline.Update(deltaTime);
+	donald->model->worldProperties.translation = donaldSpline.GetPosition();
+
+	glm::vec3 v0 = glm::normalize(donald->model->GetForward());
+	v0.y = 0;
+	glm::vec3 v1 = glm::normalize(donaldSpline.GetApproximateForward());
+	v1.y = 0;
+
+	glm::quat q = glm::quat(v0,v1);
+
+	donald->model->worldProperties.orientation *= glm::toMat4(q); //glm::lookAt(donald->model->worldProperties.translation,
+		//donald->model->worldProperties.translation + glm::normalize(donaldSpline.GetApproximateForward()), glm::vec3(0,1,0));
 
 	processContinuousInput();
 	draw();

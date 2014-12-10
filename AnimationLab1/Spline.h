@@ -5,7 +5,7 @@
 #include "Helper.h"
 #include "Node.h"
 
-enum InterpolationMode { Linear = 0, Cubic };
+enum InterpolationMode { Linear = 0, Cubic, None };
 
 class Spline
 {
@@ -50,9 +50,13 @@ class Spline
 					nodes[currentNode % nodes.size()]->GetPosition(), nodes[(currentNode+1) % nodes.size()]->GetPosition(), 
 					nodes[(currentNode+2) % nodes.size()]->GetPosition(), t);
 			}
-			else
+			else if (mode == InterpolationMode::Linear)
 			{
 				return lerp(nodes[currentNode % nodes.size()]->GetPosition(), nodes[(currentNode+1) % nodes.size()]->GetPosition(), t);
+			}
+			else
+			{
+				return nodes[currentNode % nodes.size()]->GetPosition();
 			}
 		}
 

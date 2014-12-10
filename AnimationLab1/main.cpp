@@ -92,6 +92,7 @@ NPC* donald;
 bool printText = false;
 
 Spline cameraSpline;
+Spline cactuarSpline;
 
 Gamepad* xgamepad;
 
@@ -234,6 +235,10 @@ int main(int argc, char** argv)
 	donald->patrol = donaldSpline;
 	donald->patrolling = true;
 
+	cactuarSpline.mode = InterpolationMode::None;
+	cactuarSpline.Load(25, false);
+	cactuarSpline.SetSpeed(2.0f);
+
 	glutMainLoop();
     
 	return 0;
@@ -301,6 +306,12 @@ void update()
 		camera.SetTarget(glm::vec3(0,0,0));
 	}
 
+	cactuarSpline.Update(deltaTime);
+
+	for(int i = 0; i < objectList.size(); i++)
+		if(objectList[i]->GetFileName() == "Models/jumbo.dae")
+			objectList[i]->worldProperties.translation.y = cactuarSpline.GetPosition().y;
+		
 	processContinuousInput();
 	draw();
 }
@@ -588,10 +599,10 @@ void printouts()
 	switch(editMode)
 	{
 		case EditMode::levelEdit:
-			ss << "LEVEL EDITOR";
+			ss << "Level Editor";
 			break;
 		case EditMode::splineEdit:
-			ss << "SPLINE EDITOR";
+			ss << "Spline Editor";
 			break;
 		
 	}

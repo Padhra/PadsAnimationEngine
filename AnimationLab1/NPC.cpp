@@ -8,11 +8,9 @@ NPC::NPC(vector<Model*> &objectList, Model* model, Player* player)
 
 	model->serialise = false;
 
-	//LoadAnimation("Animations/fight.dae");
-	//LoadAnimation("Animations/twirl.dae"); 
 	LoadAnimation("Animations/don_walk.dae"); //idle i.e. patrolling
 	LoadAnimation("Animations/don_wave.dae"); 
-	LoadAnimation("Animations/don_walk.dae"); 
+	LoadAnimation("Animations/don_angry_talk_cmu_79_74.dae"); 
 
 	skeleton = model->GetSkeleton();
 
@@ -21,19 +19,25 @@ NPC::NPC(vector<Model*> &objectList, Model* model, Player* player)
 
 	this->player = player;
 
-	this->threshold = 3;
+	this->threshold = 3.5f;
 
 	haveAcknowledged = false;
 	playerInRadius = false;
+
+	dialogue = "";
+	questComplete = false;
 }
 
 void NPC::ProcessKeyboardOnce(unsigned char key, int x, int y)
 {
-	if(key == KEY::KEY_v)
+	if(key == KEY::KEY_f || key == KEY::KEY_F)
 	{
 		if(playerInRadius)
 		{
-			SetState(NPCns::State::talk);
+			if(!questComplete)
+				SetState(NPCns::State::talk);
+			else
+				SetState(NPCns::State::celebrate);
 		}
 	}
 }
@@ -60,7 +64,6 @@ void NPC::Update(double deltaTime)
 	if(skeleton->animationController.isIdle)
 	{
 		SetState(NPCns::State::idle);
-		patrolling = true;
 	}
 
 	if(glm::distance(model->worldProperties.translation, player->model->worldProperties.translation) < threshold)
@@ -71,7 +74,6 @@ void NPC::Update(double deltaTime)
 		{
 			SetState(NPCns::State::wave);
 			haveAcknowledged = true;
-			patrolling = false;
 		}
 	}
 	else
@@ -80,7 +82,6 @@ void NPC::Update(double deltaTime)
 		haveAcknowledged = false;
 
 		SetState(NPCns::State::idle);
-		patrolling = true;
 	}
 }
 
@@ -89,11 +90,29 @@ void NPC::SetState(NPCns::State newState)
 	if(state != newState)
 	{
 		if(newState == NPCns::State::wave)
+		{
 			skeleton->AddToAnimationQueue(NPCns::State::wave, false, 1, TransitionType::Frozen);
+			dialogue = "Donald: Hey Sora, come over here!";
+			patrolling = false;
+		}
 		else if(newState == NPCns::State::idle)
+		{
+			dialogue = "";
 			skeleton->AddToAnimationQueue(NPCns::State::idle, true, 0.1f, TransitionType::Frozen);
+			patrolling = true;
+		}
 		else if(newState == NPCns::State::talk)
-			skeleton->AddToAnimationQueue(NPCns::State::talk, true, 1, TransitionType::Frozen);
+		{
+			skeleton->AddToAnimationQueue(NPCns::State::talk, false, 1, TransitionType::Frozen);
+			dialogue = "Donald: Sora, this is serious! *quack* These Cactuars are running rampant around Destiny island! Please help!";
+			patrolling = false;
+		}
+		else if(newState == NPCns::State::celebrate)
+		{
+			skeleton->AddToAnimationQueue(NPCns::State::celebrate, false, 1, TransitionType::Frozen);
+			dialogue = "Donald: Whoa! You did it! *quack*";
+			patrolling = false;
+		}
 
 		state = newState;
 	}

@@ -6,7 +6,7 @@
 #include "Spline.h"
 
 namespace NPCns {
-enum State { idle = 0, wave, talk };
+enum State { idle = 0, wave, talk, celebrate };
 }
 
 class NPC //TODO inherist from Character
@@ -28,6 +28,9 @@ class NPC //TODO inherist from Character
 
 		bool patrolling;
 		Spline patrol;
+
+		std::string dialogue;
+		bool questComplete;
 
 		NPC(vector<Model*> &objectList, Model* model, Player* player);
 		~NPC(){};

@@ -119,7 +119,7 @@ void LevelEditor::PrintOuts(int winw, int winh)
 		ss.str(std::string()); // clear
 		ss << "pos: (x: " << objectList->operator[](selectedObject % objectList->size())->worldProperties.translation.x 
 			<< ", y: " << objectList->operator[](selectedObject % objectList->size())->worldProperties.translation.y
-			<< ", z: " << objectList->operator[](selectedObject % objectList->size())->worldProperties.translation.z;
+			<< ", z: " << objectList->operator[](selectedObject % objectList->size())->worldProperties.translation.z << ")";
 		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH), (numUIEntries-2)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear
@@ -135,7 +135,7 @@ void LevelEditor::PrintOuts(int winw, int winh)
 		glm::vec3 euler = objectList->operator[](selectedObject % objectList->size())->GetEulerAngles();
 		ss << "|4| rot: (x: " << euler.x 
 			<< ", y: " << euler.y
-			<< ", z: " << euler.z;
+			<< ", z: " << euler.z << ")";
 		drawText(winw-(strlen(ss.str().c_str())*LETTER_WIDTH),(numUIEntries-5)*20, ss.str().c_str());
 
 		ss.str(std::string()); // clear

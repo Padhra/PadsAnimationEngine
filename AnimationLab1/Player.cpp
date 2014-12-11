@@ -18,7 +18,7 @@ Player::Player(vector<Model*> &objectList, Camera* camera, Gamepad* gamepad, Mod
 
 	speedScalar = .005f;
 
-	LoadAnimation("Animations/sora_idle_accad_female_sway.dae");
+	LoadAnimation("Animations/sora_idle_accad_female_look.dae");
 	LoadAnimation("Models/sora.dae"); 
 	LoadAnimation("Animations/fight.dae");
 
@@ -90,9 +90,9 @@ void Player::SetState(State newState)
 		if(newState == State::run)
 			skeleton->AddToAnimationQueue(State::run, true, 0.05, TransitionType::Frozen);
 		else if(newState == State::idle)
-			skeleton->AddToAnimationQueue(State::idle, true, 1, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::idle, true, 0.3, TransitionType::Frozen);
 		else if(newState == State::attack)
-			skeleton->AddToAnimationQueue(State::attack, false, 1, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::attack, false, 0.2, TransitionType::Frozen);
 
 		state = newState;
 	}

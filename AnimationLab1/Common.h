@@ -4,7 +4,7 @@
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 #define PRECISION 3
 
-#define LETTER_WIDTH 9
+#define LETTER_WIDTH 10
 
 #define MAX_ANIMATIONS 5
 

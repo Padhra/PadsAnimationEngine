@@ -96,8 +96,6 @@ Spline cactuarSpline;
 
 Gamepad* xgamepad;
 
-bool questComplete = false;
-
 int main(int argc, char** argv)
 {
 	// Set up the window
@@ -313,13 +311,12 @@ void update()
 
 	cactuarSpline.Update(deltaTime);
 
-	//TODO make a cactuar class
-	if(!questComplete)
+	if(!donald->questComplete)
 	{
 		bool check = false;
 		for(int i = 0; i < objectList.size(); i++)
 		{
-			if(objectList[i]->GetFileName() == "Models/jumbo.dae")
+			if(objectList[i]->GetFileName() == "Models/jumbo.dae")//TODO make a cactuar class
 			{
 				if(objectList[i]->drawMe)
 				{
@@ -329,7 +326,7 @@ void update()
 
 					if(player->GetState() == 2)
 					{
-						if(glm::distance(player->model->worldProperties.translation, objectList[i]->worldProperties.translation) < 1)
+						if(glm::distance(player->model->worldProperties.translation, objectList[i]->worldProperties.translation) < 2.5)
 						{
 							objectList[i]->die = true;
 						}
@@ -339,7 +336,7 @@ void update()
 		}
 
 		if(check == false)
-			questComplete = true;
+			donald->questComplete = true;
 	}
 
 		
@@ -408,14 +405,17 @@ void draw()
 
 	shaderManager.SetShaderProgram(shaderManager.GetShaderProgramID("text"));
 
-	//std::stringstream ss;
-	//ss.str(std::string()); // clear
-	//ss << "Press 'h' to show / hide controls";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-20, ss.str().c_str());
+	std::stringstream ss;
+	ss.str(std::string()); // clear
+	ss << "Press 'h' to show / hide controls";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-20, ss.str().c_str());
 
-	//ss.str(std::string()); // clear
-	//ss << fps << " fps ";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-40, ss.str().c_str());
+	ss.str(std::string()); // clear
+	ss << fps << " fps ";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-40, ss.str().c_str());
+
+	if(donald->dialogue.size() > 0)
+		drawText(WINDOW_WIDTH/2-(strlen(donald->dialogue.c_str())*4), 40, donald->dialogue.c_str());
 
 	if(printText)
 		printouts();

@@ -110,9 +110,9 @@ class Model
 		{
 			if(die)
 			{
-				worldProperties.scale.x /= (1.03f);
-				worldProperties.scale.y /= (1.03f);
-				worldProperties.scale.z /= (1.03f);
+				worldProperties.scale.x /= (1.02f);
+				worldProperties.scale.y /= (1.02f);
+				worldProperties.scale.z /= (1.02f);
 
 				worldProperties.orientation *= glm::rotate(glm::mat4(1), float(deltaTime/3), glm::vec3(0,0,1));
 

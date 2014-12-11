@@ -22,6 +22,7 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 	this->wireframe = wireframe;
 
 	drawMe = true;
+	die = false;
 }
 
 Model::~Model()

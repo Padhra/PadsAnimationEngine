@@ -15,17 +15,12 @@ Player::Player(vector<Model*> &objectList, Camera* camera, Gamepad* gamepad, Mod
 	this->gamepad = gamepad;
 
 	//xzSpeed = 0;
-	lookAngle = 0;
 
 	speedScalar = .005f;
 
-	glm::vec3 forwardXZ = camera->viewProperties.forward;
-	forwardXZ.y = 0;
-	oldForward = glm::normalize(forwardXZ);
-
-	LoadAnimation("Animations/fight.dae");
+	LoadAnimation("Animations/sora_idle_accad_female_sway.dae");
 	LoadAnimation("Models/sora.dae"); 
-	LoadAnimation("Animations/twirl.dae"); 
+	LoadAnimation("Animations/fight.dae");
 
 	skeleton = model->GetSkeleton();
 
@@ -54,7 +49,7 @@ void Player::ProcessKeyboardContinuous(bool* keyStates, double deltaTime)
 			Move(deltaTime, -horizontal, vertical);
 			
 		}
-		else if(state < State::twirl) //i.e. not a oneshot
+		else if(state < State::attack) //i.e. not a oneshot
 		{
 			SetState(State::idle);
 		}
@@ -66,10 +61,7 @@ void Player::ProcessKeyboardOnce(unsigned char key, int x, int y)
 	//Animation one shots
 	if(key == KEY::KEY_r)
 	{
-		if(state != State::run)
-		{
-			SetState(State::twirl);
-		}
+		
 	}
 }
 
@@ -99,8 +91,8 @@ void Player::SetState(State newState)
 			skeleton->AddToAnimationQueue(State::run, true, 0.05, TransitionType::Frozen);
 		else if(newState == State::idle)
 			skeleton->AddToAnimationQueue(State::idle, true, 1, TransitionType::Frozen);
-		else if(newState == State::twirl)
-			skeleton->AddToAnimationQueue(State::twirl, false, 1, TransitionType::Frozen);
+		else if(newState == State::attack)
+			skeleton->AddToAnimationQueue(State::attack, false, 1, TransitionType::Frozen);
 
 		state = newState;
 	}
@@ -153,7 +145,7 @@ void Player::PrintOuts(int winw, int winh)
 		ss << "Idle";
 	else if(state == State::run)
 		ss << "Run";
-	else if(state == State::twirl)
+	else if(state == State::attack)
 		ss << "One-shot";
 	drawText(20, winh-160, ss.str().c_str());
 }

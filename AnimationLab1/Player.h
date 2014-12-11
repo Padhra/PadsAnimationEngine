@@ -17,7 +17,7 @@
 #include "glm\glm.hpp"
 
 
-enum State { idle = 0, run, twirl };
+enum State { idle = 0, run, attack };
 
 class Player 
 {
@@ -25,7 +25,7 @@ class Player
 		
 		//float xzSpeed;
 		//float lookAngle;
-		glm::vec3 oldForward;
+
 		float speedScalar;
 
 		int state;
@@ -35,7 +35,7 @@ class Player
 
 		Skeleton* skeleton;
 
-		float lookAngle;
+		vector<Model*> *objectList;
 
 	public:
 
@@ -47,12 +47,24 @@ class Player
 		void Update(double deltaTime);
 
 		void SetState(State newState);
+		int GetState() { return state; }
 
 		void Move(double deltaTime, float horizontal, float vertical);
 		void LoadAnimation(const char* fileName) { model->GetSkeleton()->LoadAnimation(fileName); }
 
 		void ProcessKeyboardContinuous(bool* keyStates, double deltaTime);
 		void ProcessKeyboardOnce(unsigned char key, int x, int y);
+		void ProcessMouseButton(int button, int state, int x, int y)
+		{
+			switch(button) {
+				case GLUT_LEFT_BUTTON:
+					if(state != State::run)
+					{
+						SetState(State::attack);
+					}
+					break;
+			}
+		}
 
 		void PrintOuts(int winw, int winh);
 

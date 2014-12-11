@@ -92,6 +92,7 @@ class Model
 		
 		bool serialise;
 		bool drawMe;
+		bool die;
 
 		glm::mat4 globalInverseTransform;
 
@@ -104,6 +105,24 @@ class Model
 		bool Load(const char* file_name);
 		
 		void Render(GLuint shader);
+
+		void Update(double deltaTime)
+		{
+			if(die)
+			{
+				worldProperties.scale.x /= (1.03f);
+				worldProperties.scale.y /= (1.03f);
+				worldProperties.scale.z /= (1.03f);
+
+				worldProperties.orientation *= glm::rotate(glm::mat4(1), float(deltaTime/3), glm::vec3(0,0,1));
+
+				if(worldProperties.scale.x <= 0.00005)
+				{
+					die = false;
+					drawMe = false;
+				}
+			}
+		}
 
 		GLuint LoadTexture(const char* fileName);
 		void LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);

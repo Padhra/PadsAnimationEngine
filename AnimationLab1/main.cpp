@@ -96,6 +96,8 @@ Spline cactuarSpline;
 
 Gamepad* xgamepad;
 
+bool questComplete = false;
+
 int main(int argc, char** argv)
 {
 	// Set up the window
@@ -170,7 +172,7 @@ int main(int argc, char** argv)
 	player = new Player(objectList, &camera, xgamepad, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"), false)); 
 	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::mat4(1), glm::vec3(.1), "Models/don1.dae", shaderManager.GetShaderProgramID("skinned"), false), player);
 
-	objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.0001), "Models/jumbo.dae", shaderManager.GetShaderProgramID("diffuse")));
+	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.0001), "Models/jumbo.dae", shaderManager.GetShaderProgramID("diffuse")));
 
 	#pragma region IK Stuff
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
@@ -265,9 +267,10 @@ void update()
 	player->Update(deltaTime);
 	donald->Update(deltaTime); //TODO - make a character class with functions for update / input etc.
 
-	//Animation
+	
 	for(int i = 0; i< objectList.size(); i++)
 	{
+		//Animation
 		if(objectList[i]->HasSkeleton())
 		{
 			//TODO - If animationMode == IK .. and so on
@@ -280,6 +283,8 @@ void update()
 			
 			objectList[i]->GetSkeleton()->UpdateGlobalTransforms(objectList[i]->GetSkeleton()->GetRootBone(), glm::mat4());
 		}
+
+		objectList[i]->Update(deltaTime);
 	}
 
 	/*if(objectList.size() == 2)
@@ -308,12 +313,43 @@ void update()
 
 	cactuarSpline.Update(deltaTime);
 
-	for(int i = 0; i < objectList.size(); i++)
-		if(objectList[i]->GetFileName() == "Models/jumbo.dae")
-			objectList[i]->worldProperties.translation.y = cactuarSpline.GetPosition().y;
+	//TODO make a cactuar class
+	if(!questComplete)
+	{
+		bool check = false;
+		for(int i = 0; i < objectList.size(); i++)
+		{
+			if(objectList[i]->GetFileName() == "Models/jumbo.dae")
+			{
+				if(objectList[i]->drawMe)
+				{
+					check = true;
+
+					objectList[i]->worldProperties.translation.y = cactuarSpline.GetPosition().y;
+
+					if(player->GetState() == 2)
+					{
+						if(glm::distance(player->model->worldProperties.translation, objectList[i]->worldProperties.translation) < 1)
+						{
+							objectList[i]->die = true;
+						}
+					}
+				}
+			}
+		}
+
+		if(check == false)
+			questComplete = true;
+	}
+
 		
 	processContinuousInput();
 	draw();
+}
+
+void CactuarDeathAnimation()
+{
+
 }
 
 //Draw loops through each 3d object, and switches to the correct shader for that object, and fill the uniform matrices with the up-to-date values,
@@ -556,6 +592,9 @@ void mouseButton(int button, int state, int x, int y)
 			}
 			break;
     }
+
+	if(!freeMouse)
+		player->ProcessMouseButton(button, state, x, y);
 }
 
 void mouseWheel(int button, int dir, int x, int y)

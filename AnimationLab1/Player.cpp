@@ -127,17 +127,17 @@ void Player::PrintOuts(int winw, int winh)
 	std::stringstream ss;
 	ss << "player.pos: (" << std::fixed << std::setprecision(PRECISION) << model->worldProperties.translation.x << ", " << model->worldProperties.translation.y 
 		<< ", " << model->worldProperties.translation.z << ")";
-	drawText(20,winh-100, ss.str().c_str());
+	drawText(20,winh-120, ss.str().c_str());
 
 	glm::vec3 euler = glm::eulerAngles(glm::toQuat(model->worldProperties.orientation));
 	ss.str(std::string()); // clear
 	ss << "player.rot: (" << std::fixed << std::setprecision(PRECISION) << euler.x << ", " << euler.y << ", " << euler.z << ")";
-	drawText(20, winh-120, ss.str().c_str());
+	drawText(20, winh-140, ss.str().c_str());
 
 	ss.str(std::string()); // clear
 	glm::vec3 forward = model->GetForward();
 	ss << "player.forward: (" << std::fixed << std::setprecision(PRECISION) << forward.x << ", " << forward.y << ", " << forward.z << ")";
-	drawText(20, winh-140, ss.str().c_str());
+	drawText(20, winh-160, ss.str().c_str());
 	
 	ss.str(std::string()); // clear
 	ss << "Current state: ";
@@ -147,5 +147,5 @@ void Player::PrintOuts(int winw, int winh)
 		ss << "Run";
 	else if(state == State::attack)
 		ss << "One-shot";
-	drawText(20, winh-160, ss.str().c_str());
+	drawText(20, winh-200, ss.str().c_str());
 }

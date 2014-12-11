@@ -6,6 +6,8 @@
 bool Skeleton::ConstraintsEnabled = true;
 float Skeleton::AnimationSpeedScalar = 1.0f;
 
+float AnimationController::blendScalar = 1.0f;
+
 Skeleton::Skeleton(Model* p_myModel)
 {
 	hasKeyframes = false;

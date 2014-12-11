@@ -1,10 +1,10 @@
-﻿Build started 11/12/2014 03:58:49.
+﻿Build started 11/12/2014 04:30:51.
      1>Project "C:\Users\Patrick\Desktop\AnimationLab1\AnimationLab1\AnimationLab1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\ImageMagick-6\Include" /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\assimp--3.0.1270-sdk\include" /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\glew-1.10.0\include" /IC:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\freeglut\include /I"C:\Users\Patrick\Desktop\AnimationLab1\\AnimationLab1\glm-0.9.5.4\glm" /ZI /nologo /W3 /WX- /MP /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\skeleton.h(102): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\skeleton.h(209): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\skeleton.h(104): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\skeleton.h(211): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\patrick\desktop\animationlab1\animationlab1\imagemagick-6\include\magick++\drawable.h(456): warning C4251: 'Magick::DrawableBezier::_coordinates' : class 'std::list<_Ty>' needs to have dll-interface to be used by clients of class 'Magick::DrawableBezier'
                  with
                  [
@@ -302,10 +302,12 @@
      1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(271): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(319): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(363): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(472): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(579): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
-     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(605): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(467): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(508): warning C4244: '-=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(510): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(581): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
      1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(607): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
+     1>c:\users\patrick\desktop\animationlab1\animationlab1\main.cpp(609): warning C4244: 'argument' : conversion from 'double' to 'GLfloat', possible loss of data
          GLM: angleAxis function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
          GLM: rotate function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
          GLM: perspective function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
@@ -333,4 +335,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:04.13
+Time Elapsed 00:00:04.02

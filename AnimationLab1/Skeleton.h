@@ -61,6 +61,8 @@ struct AnimationCommand
 
 struct AnimationController
 {
+	static float blendScalar;
+
 	bool isBlending;
 	bool isIdle;
 	
@@ -99,7 +101,7 @@ struct AnimationController
 
 		if(isBlending) //If blending do that
 		{
-			blendTimer += (deltaTime/1000);// * 0.1f;
+			blendTimer += (deltaTime/1000) * blendScalar;
 			float t = blendTimer / blendDuration;
 
 			next->weight = t*t * (3.0f - 2.0f*t);//lerp(0.0f, 1.0f, t);

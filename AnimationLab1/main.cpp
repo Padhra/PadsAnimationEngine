@@ -61,11 +61,11 @@ Camera camera;
 glm::mat4 projectionMatrix; // Store the projection matrix
 bool freeMouse = false;
 
-int WINDOW_WIDTH = 1920;
-int WINDOW_HEIGHT = 1080;
+//int WINDOW_WIDTH = 1920;
+//int WINDOW_HEIGHT = 1080;
 
-//int WINDOW_WIDTH = 1280;
-//int WINDOW_HEIGHT = 720;
+int WINDOW_WIDTH = 1280;
+int WINDOW_HEIGHT = 720;
 
 int oldTimeSinceStart;
 double deltaTime;
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 
 	Spline donaldSpline;
 	donaldSpline.SetSpeed(3.0f);
-	donaldSpline.Load(11, true);
+	donaldSpline.Load(11, false);
 	donaldSpline.constantSpeed = true;
 	donaldSpline.mode = InterpolationMode::Cubic;
 
@@ -407,14 +407,9 @@ void draw()
 
 	shaderManager.SetShaderProgram(shaderManager.GetShaderProgramID("text"));
 
-	std::stringstream ss;
-	ss.str(std::string()); // clear
-	ss << "Press 'h' to show / hide controls";
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-20, ss.str().c_str());
-
 	//ss.str(std::string()); // clear
 	//ss << fps << " fps ";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-40, ss.str().c_str());
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-60, ss.str().c_str());
 
 	if(donald->dialogue.size() > 0)
 		drawText(WINDOW_WIDTH/2-(strlen(donald->dialogue.c_str())*4), 80, donald->dialogue.c_str());
@@ -508,6 +503,13 @@ void processContinuousInput()
 		levelEditor->ProcessKeyboardContinuous(keyStates, directionKeys, deltaTime);
 	else if(editMode == splineEdit)
 		splineEditor->ProcessKeyboardContinuous(keyStates, directionKeys, deltaTime);
+
+	if(keyStates[KEY::KEY_MINUS])
+		AnimationController::blendScalar -= deltaTime * .001;
+	else if(keyStates[KEY::KEY_PLUS])
+		AnimationController::blendScalar += deltaTime * .001;
+	else if(keyStates[KEY::KEY_BACKSPACE])
+		AnimationController::blendScalar = 1.0f;
 
 	camera.ProcessKeyboardContinuous(keyStates, deltaTime);
 	player->ProcessKeyboardContinuous(keyStates, deltaTime);
@@ -647,7 +649,7 @@ void printouts()
 			break;
 		
 	}
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-60, ss.str().c_str());
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-80, ss.str().c_str());
 
 	//ss.str(std::string()); // clear
 	//if(Skeleton::ConstraintsEnabled)
@@ -656,18 +658,22 @@ void printouts()
 	//	ss << "Constraints disabled |c|";
 	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
 
+	ss.str(std::string()); // clear
+	ss << "Blend Scalar: " << AnimationController::blendScalar;
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-100, ss.str().c_str());
+
 	//PRINT CAMERA
 	ss.str(std::string()); // clear
 	ss << "camera.forward: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.forward.x << ", " << camera.viewProperties.forward.y << ", " << camera.viewProperties.forward.z << ")";
-	drawText(20,WINDOW_HEIGHT-20, ss.str().c_str());
-
-	ss.str(std::string()); // clear
-	ss << "camera.pos: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.position.x << ", " << camera.viewProperties.position.y << ", " << camera.viewProperties.position.z << ")";
 	drawText(20,WINDOW_HEIGHT-40, ss.str().c_str());
 
 	ss.str(std::string()); // clear
-	ss << "camera.up: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.up.x << ", " << camera.viewProperties.up.y << ", " << camera.viewProperties.up.z << ")";
+	ss << "camera.pos: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.position.x << ", " << camera.viewProperties.position.y << ", " << camera.viewProperties.position.z << ")";
 	drawText(20,WINDOW_HEIGHT-60, ss.str().c_str());
+
+	ss.str(std::string()); // clear
+	ss << "camera.up: (" << std::fixed << std::setprecision(PRECISION) << camera.viewProperties.up.x << ", " << camera.viewProperties.up.y << ", " << camera.viewProperties.up.z << ")";
+	drawText(20,WINDOW_HEIGHT-80, ss.str().c_str());
 
 	//PRINT ANIMATION TIMER
 	//TODO - selected model

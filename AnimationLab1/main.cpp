@@ -61,11 +61,11 @@ Camera camera;
 glm::mat4 projectionMatrix; // Store the projection matrix
 bool freeMouse = false;
 
-//int WINDOW_WIDTH = 1920;
-//int WINDOW_HEIGHT = 1080;
+int WINDOW_WIDTH = 1920;
+int WINDOW_HEIGHT = 1080;
 
-int WINDOW_WIDTH = 1280;
-int WINDOW_HEIGHT = 720;
+//int WINDOW_WIDTH = 1280;
+//int WINDOW_HEIGHT = 720;
 
 int oldTimeSinceStart;
 double deltaTime;
@@ -164,13 +164,15 @@ int main(int argc, char** argv)
 
 	Node::objectList = &objectList;
 
-	vector<Model*> loadedObjects = LevelEditor::Load(1);
+	vector<Model*> loadedObjects = LevelEditor::Load(7);
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
 	player = new Player(objectList, &camera, xgamepad, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"), false)); 
 	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::mat4(1), glm::vec3(.1), "Models/don1.dae", shaderManager.GetShaderProgramID("skinned"), false), player);
 
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.0001), "Models/jumbo.dae", shaderManager.GetShaderProgramID("diffuse")));
+	objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.001), "Models/crate.dae", shaderManager.GetShaderProgramID("diffuse")));
+	
 
 	#pragma region IK Stuff
 	//std::vector<Bone*> chain; //just name end effector and number of links to go back!!!!
@@ -410,12 +412,12 @@ void draw()
 	ss << "Press 'h' to show / hide controls";
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-20, ss.str().c_str());
 
-	ss.str(std::string()); // clear
-	ss << fps << " fps ";
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-40, ss.str().c_str());
+	//ss.str(std::string()); // clear
+	//ss << fps << " fps ";
+	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-40, ss.str().c_str());
 
 	if(donald->dialogue.size() > 0)
-		drawText(WINDOW_WIDTH/2-(strlen(donald->dialogue.c_str())*4), 40, donald->dialogue.c_str());
+		drawText(WINDOW_WIDTH/2-(strlen(donald->dialogue.c_str())*4), 80, donald->dialogue.c_str());
 
 	if(printText)
 		printouts();

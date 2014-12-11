@@ -19,8 +19,8 @@ Player::Player(vector<Model*> &objectList, Camera* camera, Gamepad* gamepad, Mod
 	speedScalar = .005f;
 
 	LoadAnimation("Animations/sora_idle_accad_female_look.dae");
-	LoadAnimation("Models/sora.dae"); 
-	LoadAnimation("Animations/fight.dae");
+	LoadAnimation("Animations/sora_brisk_walk.dae"); 
+	LoadAnimation("Animations/sora_punch_cmu_02_05.dae");
 
 	skeleton = model->GetSkeleton();
 

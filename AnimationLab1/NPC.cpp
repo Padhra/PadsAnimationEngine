@@ -11,6 +11,7 @@ NPC::NPC(vector<Model*> &objectList, Model* model, Player* player)
 	LoadAnimation("Animations/don_walk.dae"); //idle i.e. patrolling
 	LoadAnimation("Animations/don_wave.dae"); 
 	LoadAnimation("Animations/don_angry_talk_cmu_79_74.dae"); 
+	LoadAnimation("Animations/don_happy_talk_cmu_happy.dae");
 
 	skeleton = model->GetSkeleton();
 

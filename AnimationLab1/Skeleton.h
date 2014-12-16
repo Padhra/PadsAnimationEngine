@@ -34,7 +34,7 @@ struct Pose
 	float weight;
 };
 
-enum TransitionType { Smooth = 0, Frozen, Immediate };
+enum TransitionType { Smooth = 0, Immediate };
 
 struct AnimationCommand
 {
@@ -62,6 +62,7 @@ struct AnimationCommand
 struct AnimationController
 {
 	static float blendScalar;
+	static bool frozen;
 
 	bool isBlending;
 	bool isIdle;
@@ -142,7 +143,8 @@ struct AnimationController
 					{
 						if(current != 0)
 						{
-							if(transitionType == TransitionType::Frozen)
+							//if(transitionType == TransitionType::Frozen)
+							if(frozen)
 								current->frozen = true; 
 		
 							next = command.animation;

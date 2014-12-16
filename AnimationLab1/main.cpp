@@ -67,6 +67,9 @@ bool freeMouse = false;
 int WINDOW_WIDTH = 1280;
 int WINDOW_HEIGHT = 720;
 
+//int WINDOW_WIDTH = 1680;
+//int WINDOW_HEIGHT = 1050;
+
 int oldTimeSinceStart;
 double deltaTime;
 
@@ -104,6 +107,8 @@ int main(int argc, char** argv)
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition (0, 0); 
     glutCreateWindow("KH 0.5 Remix");
+
+	//glutFullScreen();
 
 	glutSetCursor(GLUT_CURSOR_NONE);
 	
@@ -164,14 +169,14 @@ int main(int argc, char** argv)
 
 	Node::objectList = &objectList;
 
-	vector<Model*> loadedObjects = LevelEditor::Load(7);
+	vector<Model*> loadedObjects = LevelEditor::Load(8);
 	objectList.insert(objectList.end(), loadedObjects.begin(), loadedObjects.end());
 	
 	player = new Player(objectList, &camera, xgamepad, new Model(glm::vec3(15,0,0), glm::mat4(1), glm::vec3(.6), "Models/sora.dae", shaderManager.GetShaderProgramID("skinned"), false)); 
 	donald = new NPC(objectList, new Model(glm::vec3(5,0,0), glm::mat4(1), glm::vec3(.1), "Models/don1.dae", shaderManager.GetShaderProgramID("skinned"), false), player);
 
 	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.0001), "Models/jumbo.dae", shaderManager.GetShaderProgramID("diffuse")));
-	objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.001), "Models/crate.dae", shaderManager.GetShaderProgramID("diffuse")));
+	//objectList.push_back(new Model(glm::vec3(0,0,0), glm::mat4(1), glm::vec3(.001), "Models/crate.dae", shaderManager.GetShaderProgramID("diffuse")));
 	
 
 	#pragma region IK Stuff
@@ -407,12 +412,8 @@ void draw()
 
 	shaderManager.SetShaderProgram(shaderManager.GetShaderProgramID("text"));
 
-	//ss.str(std::string()); // clear
-	//ss << fps << " fps ";
-	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-60, ss.str().c_str());
-
 	if(donald->dialogue.size() > 0)
-		drawText(WINDOW_WIDTH/2-(strlen(donald->dialogue.c_str())*4), 80, donald->dialogue.c_str());
+		dialogue(WINDOW_WIDTH/2-(strlen(donald->dialogue.c_str())*4), 80, donald->dialogue.c_str());
 
 	if(printText)
 		printouts();
@@ -472,6 +473,9 @@ void keyPressed (unsigned char key, int x, int y)
 	{
 		splineEditor->ProcessKeyboardOnce(key, x, y);
 	}
+
+	if(key == KEY::KEY_v || key == KEY::KEY_V)
+		AnimationController::frozen = !AnimationController::frozen;
 		
 	camera.ProcessKeyboardOnce(key, x, y);
 	player->ProcessKeyboardOnce(key, x, y);
@@ -508,7 +512,7 @@ void processContinuousInput()
 		AnimationController::blendScalar -= deltaTime * .001;
 	else if(keyStates[KEY::KEY_PLUS])
 		AnimationController::blendScalar += deltaTime * .001;
-	else if(keyStates[KEY::KEY_BACKSPACE])
+	else if(keyStates[KEY::KEY_B] || keyStates[KEY::KEY_b])
 		AnimationController::blendScalar = 1.0f;
 
 	camera.ProcessKeyboardContinuous(keyStates, deltaTime);
@@ -649,7 +653,11 @@ void printouts()
 			break;
 		
 	}
-	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-80, ss.str().c_str());
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-60, ss.str().c_str());
+
+	ss.str(std::string()); // clear
+	ss << fps << " fps ";
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-40, ss.str().c_str());
 
 	//ss.str(std::string()); // clear
 	//if(Skeleton::ConstraintsEnabled)
@@ -659,7 +667,11 @@ void printouts()
 	//drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*10),WINDOW_HEIGHT-40, ss.str().c_str());
 
 	ss.str(std::string()); // clear
-	ss << "Blend Scalar: " << AnimationController::blendScalar;
+	ss << "|+/-/b| Blend Scalar: " << AnimationController::blendScalar;
+	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-80, ss.str().c_str());
+
+	ss.str(std::string()); // clear
+	ss << "|v| Frozen: " << AnimationController::frozen;
 	drawText(WINDOW_WIDTH-(strlen(ss.str().c_str())*LETTER_WIDTH),WINDOW_HEIGHT-100, ss.str().c_str());
 
 	//PRINT CAMERA

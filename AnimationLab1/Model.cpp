@@ -23,6 +23,9 @@ Model::Model(glm::vec3 position, glm::mat4 orientation, glm::vec3 scale, const c
 
 	drawMe = true;
 	die = false;
+
+	dieTimer = 0.0f;
+	dieWaitTime = 0.8f;
 }
 
 Model::~Model()

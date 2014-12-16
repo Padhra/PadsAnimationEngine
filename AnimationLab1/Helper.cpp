@@ -48,10 +48,21 @@ void drawText(int x, int y, const char *st)
 	
 	for(i=0; i < l; i++) // loop until i is greater then l
 	{
-		//if(!dialogue)
-			//glutBitmapCharacter(GLUT_BITMAP_9_BY_15, st[i]);
-		//else
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, st[i]);
+		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, st[i]);
+	}
+}
+
+void dialogue(int x, int y, const char *st)
+{
+	int l,i;
+
+	l=strlen(st); // see how many characters are in text string.
+
+	glWindowPos2i(x, y); // location to start printing text
+	
+	for(i=0; i < l; i++) // loop until i is greater then l
+	{
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, st[i]);
 	}
 }
 

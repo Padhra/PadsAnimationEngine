@@ -88,11 +88,11 @@ void Player::SetState(State newState)
 	if(state != newState)
 	{
 		if(newState == State::run)
-			skeleton->AddToAnimationQueue(State::run, true, 0.05, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::run, true, 0.05, TransitionType::Smooth);
 		else if(newState == State::idle)
-			skeleton->AddToAnimationQueue(State::idle, true, 0.3, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::idle, true, 0.3, TransitionType::Smooth);
 		else if(newState == State::attack)
-			skeleton->AddToAnimationQueue(State::attack, false, 0.2, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(State::attack, false, 0.2, TransitionType::Smooth);
 
 		state = newState;
 	}

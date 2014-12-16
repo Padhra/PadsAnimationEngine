@@ -87,6 +87,8 @@ class Model
 		bool hasSkeleton;
 
 		bool wireframe;
+		float dieTimer;
+		float dieWaitTime;
 
 	public:
 		
@@ -110,16 +112,21 @@ class Model
 		{
 			if(die)
 			{
-				worldProperties.scale.x /= (1.02f);
-				worldProperties.scale.y /= (1.02f);
-				worldProperties.scale.z /= (1.02f);
+				dieTimer += deltaTime/1000;
 
-				worldProperties.orientation *= glm::rotate(glm::mat4(1), float(deltaTime/3), glm::vec3(0,0,1));
-
-				if(worldProperties.scale.x <= 0.00005)
+				if(dieTimer > dieWaitTime)
 				{
-					die = false;
-					drawMe = false;
+					worldProperties.scale.x /= (1.02f);
+					worldProperties.scale.y /= (1.02f);
+					worldProperties.scale.z /= (1.02f);
+
+					worldProperties.orientation *= glm::rotate(glm::mat4(1), float(deltaTime/3), glm::vec3(0,0,1));
+
+					if(worldProperties.scale.x <= 0.00005)
+					{
+						die = false;
+						drawMe = false;
+					}
 				}
 			}
 		}

@@ -92,25 +92,25 @@ void NPC::SetState(NPCns::State newState)
 	{
 		if(newState == NPCns::State::wave)
 		{
-			skeleton->AddToAnimationQueue(NPCns::State::wave, false, 1, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(NPCns::State::wave, false, 1, TransitionType::Smooth);
 			dialogue = "Donald: Hey Sora, come over here!";
 			patrolling = false;
 		}
 		else if(newState == NPCns::State::idle)
 		{
 			dialogue = "";
-			skeleton->AddToAnimationQueue(NPCns::State::idle, true, 0.1f, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(NPCns::State::idle, true, 0.1f, TransitionType::Smooth);
 			patrolling = true;
 		}
 		else if(newState == NPCns::State::talk)
 		{
-			skeleton->AddToAnimationQueue(NPCns::State::talk, false, 1, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(NPCns::State::talk, false, 1, TransitionType::Smooth);
 			dialogue = "Donald: Sora, this is serious! *quack* These Cactuars are running rampant around Destiny island! Please help!";
 			patrolling = false;
 		}
 		else if(newState == NPCns::State::celebrate)
 		{
-			skeleton->AddToAnimationQueue(NPCns::State::celebrate, false, 1, TransitionType::Frozen);
+			skeleton->AddToAnimationQueue(NPCns::State::celebrate, false, 1, TransitionType::Smooth);
 			dialogue = "Donald: Whoa! You did it! *quack*";
 			patrolling = false;
 		}
